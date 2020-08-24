@@ -5,4 +5,5 @@
   position: absolute;
   top: 20px;
   left: 50vw;
+  z-index: 1000000;
 }
