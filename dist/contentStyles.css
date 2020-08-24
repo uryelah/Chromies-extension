@@ -1,9 +1,21 @@
-.modal-test {
-  background-color: #fff;
-  border: 2px solid;
-  padding: 25px;
-  position: absolute;
-  top: 20px;
-  left: 50vw;
+.className {
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 1000000;
+}
+
+
+.btn-default {
+  margin-left: 0 !important;
+  width: 250px;
+}
+
+.note-btn-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row--hidden, .btnContainer--hidden {
+  display: none;
 }
