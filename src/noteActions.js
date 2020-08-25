@@ -9,19 +9,23 @@ const handleScreenshot = (overVideo, overElement) => {
       canvas = document.createElement('canvas');
       overVideo.parentNode.appendChild(canvas);
     }
+
     // set it to the same dimensions as the video
     canvas.style.height = `${100}%`;
     canvas.style.width = `${100}%`;
     canvas.height = overVideo.clientHeight;
-    canvas.width = overVideo.clientWidth;
+    canvas.widWWth = overVideo.clientWidth;
     let ctx = canvas.getContext('2d');
     ctx.drawImage(overVideo, 0, 0, overVideo.clientWidth, overVideo.clientHeight);
     overVideo.style.backgroundImage = "url(" + canvas.toDataURL() + ")";
     overVideo.style.backgroundSize = 'cover';
+
     // get image blob to stores
     canvas.toBlob(function (blob) {
       saveAs(blob, `${document.title}.png`);
     });
+    return;
+
   } else {
     // not great, taking the screensht of the whole doc could be a better idea
     html2canvas(overElement.parentNode).then(function(canvas) {
@@ -38,4 +42,19 @@ const handleScreenshot = (overVideo, overElement) => {
   }
 };
 
-export { handleScreenshot };
+const handleText = (video, input) => {
+  input.querySelector('#textInputBtn').onclick = () => {
+    const textContent = input.querySelector('#textInput').value;
+
+    console.log('Video time stamps: ', video && video[0].value, video && video[1].value, textContent);
+
+    input.querySelector('#textInput').value = '';
+
+    document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
+
+    input.classList.add('input-text--hidden');
+  };
+  return input.value;
+};
+
+export { handleScreenshot, handleText };

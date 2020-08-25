@@ -7356,19 +7356,23 @@ const handleScreenshot = (overVideo, overElement) => {
       canvas = document.createElement('canvas');
       overVideo.parentNode.appendChild(canvas);
     }
+
     // set it to the same dimensions as the video
     canvas.style.height = `${100}%`;
     canvas.style.width = `${100}%`;
     canvas.height = overVideo.clientHeight;
-    canvas.width = overVideo.clientWidth;
+    canvas.widWWth = overVideo.clientWidth;
     let ctx = canvas.getContext('2d');
     ctx.drawImage(overVideo, 0, 0, overVideo.clientWidth, overVideo.clientHeight);
     overVideo.style.backgroundImage = "url(" + canvas.toDataURL() + ")";
     overVideo.style.backgroundSize = 'cover';
+
     // get image blob to stores
     canvas.toBlob(function (blob) {
       Object(FileSaver_min["saveAs"])(blob, `${document.title}.png`);
     });
+    return;
+
   } else {
     // not great, taking the screensht of the whole doc could be a better idea
     html2canvas_default()(overElement.parentNode).then(function(canvas) {
@@ -7385,9 +7389,23 @@ const handleScreenshot = (overVideo, overElement) => {
   }
 };
 
+const handleText = (video, input) => {
+  input.querySelector('#textInputBtn').onclick = () => {
+    const textContent = input.querySelector('#textInput').value;
+
+    console.log('Video time stamps: ', video && video[0].value, video && video[1].value, textContent);
+
+    input.querySelector('#textInput').value = '';
+
+    document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
+
+    input.classList.add('input-text--hidden');
+  };
+  return input.value;
+};
+
 
 // CONCATENATED MODULE: ./src/content.js
-
 
 
 
@@ -7475,6 +7493,7 @@ const main = () => {
   const addNoteBtnContainer = document.createElement('div');
   const noteTypeRow = document.createElement('div');
   const videoRangeContainer = document.createElement('div');
+  const textInputContainerElement = document.createElement('div');
 
   addNoteBtnContainer.classList = 'btnContainer--hidden';
   addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
@@ -7484,6 +7503,9 @@ const main = () => {
 
   videoRangeContainer.classList = 'range-controll-group video-range--hidden';
   videoRangeContainer.setAttribute('id', 'rangeControllGroup');
+
+  textInputContainerElement.classList = 'input-text--hidden input-text';
+  textInputContainerElement.setAttribute('id', 'textInputContainer');
 
   addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
@@ -7508,8 +7530,16 @@ const main = () => {
   <input type="number" class="range-input" id="dataRangeMax"/>
 `;
 
+  textInputContainerElement.innerHTML = `
+  <textarea maxlength="50" class="text-input" id="textInput"></textarea> 
+  <button type="button" class="btn-default text-input-btn" id="textInputBtn">
+    Add
+  </button>
+  `;
+
   addNoteBtnContainer.appendChild(noteTypeRow);
   addNoteBtnContainer.prepend(videoRangeContainer);
+  addNoteBtnContainer.appendChild(textInputContainerElement);
 
   // add mouse move event listener to mouse to make button appear near it
   let addNoteBtnCont;
@@ -7520,6 +7550,7 @@ const main = () => {
   let overVideo;
   let overElement;
   let videoRangeInputs;
+  let textInputContainer;
 
   const videoPlayersLocation = [];
   const coords = [0, 0];
@@ -7535,6 +7566,7 @@ const main = () => {
       Array.from(videoPlayersLocation).forEach((video, i) => {
         if (e.clientX > video.x.start && e.clientX < video.x.end
           && e.clientY > video.y.start && e.clientY < video.y.end) {
+            console.log('pass?');
           overVideo = videoPlayers[i];
           nothingFound = false;
         }
@@ -7564,9 +7596,14 @@ const main = () => {
       button.addEventListener('click', e => {
         const type = e.target.dataset.type;
         console.log(`Handle note of type: ${type}`);
-  
+        textInputContainer.classList.add('input-text--hidden');
+
         if (type === 'image') {
           handleScreenshot(overVideo, overElement);
+        } else if (type === 'text') {
+          document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
+          textInputContainer.classList.remove('input-text--hidden');
+          handleText(overVideo ? videoRangeInputs : false, textInputContainer);
         }
       });
     });
@@ -7578,7 +7615,6 @@ const main = () => {
       if (keys.includes('W') && keys.includes('Shift')) {
         if (addNoteBtnCont) {
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
-          videoRangeContainer.classList.add('video-range--hidden');
 
           noteTypeEvents(overVideo, overElement);
 
@@ -7586,7 +7622,8 @@ const main = () => {
           if (overVideo) {
             console.log(`Video at ${overVideo.currentTime} and with total duration of ${overVideo.duration}`);
             console.log(`Video currently ${overVideo.paused ? 'paused' : 'playing'}`);
-
+            
+            videoRangeContainer.classList.remove('video-range--hidden');
             const youtubeProgressBar = document.getElementsByClassName('ytp-progress-bar')[0];
 
             // Pause video
@@ -7628,6 +7665,7 @@ const main = () => {
               addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage) - ((position.x + (position.width * videoPercentage)) <= 350 ? 0 : 175)}px, ${position.y + position.height}px)`;
             }
           } else {
+            videoRangeContainer.classList.add('video-range--hidden');
             addNoteBtnCont.style.transform = `translate(${coords[0]}px, ${coords[1]}px)`;
           }
         }
@@ -7663,11 +7701,13 @@ const main = () => {
   noteTypeBtns = document.getElementById('noteTypes');
   noteTypeBtnList = document.getElementsByClassName('noteTypeBtn');
   videoRangeInputs = document.getElementsByClassName('range-input');
+  textInputContainer = document.getElementById('textInputContainer');
 
   addNoteBtn.addEventListener('click', e => {
-    console.log(noteTypeBtns);
     if (noteTypeBtns) {
+      document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
       noteTypeBtns.classList.remove('row--hidden');
+      noteTypeBtns.classList.remove('hidden');
     };
   });
 

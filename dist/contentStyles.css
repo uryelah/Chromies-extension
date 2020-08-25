@@ -20,8 +20,23 @@
   width: 350px;
 }
 
+.input-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.text-input {
+  width: 100%;
+}
+
+.text-input-btn {
+  width: 100%;
+}
+
+.hidden,
 .row--hidden,
 .btnContainer--hidden,
-.video-range--hidden {
+.video-range--hidden,
+.input-text--hidden {
   display: none;
 }
