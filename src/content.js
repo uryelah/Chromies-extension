@@ -1,6 +1,6 @@
 import 'canvas-toBlob';
 import { handleScreenshot, handleText, handleVideo } from './noteActions';
-import { currentPageNotes } from './getNotes';
+//import { currentPageNotes } from './getNotes';
 
 const noteFactory = (note) => (`
   <div class="previous-note note" id="${note.id}">
@@ -10,7 +10,7 @@ const noteFactory = (note) => (`
 `);
 
 let userIsAuthenticated = false;
-
+/*
 chrome.storage.sync.get(['userToken'], function (result) {
   if (result.userToken === 'hell yes') {
     userIsAuthenticated = true;
@@ -23,12 +23,12 @@ chrome.storage.sync.get(['userToken'], function (result) {
     console.log('User is not authenticated');
   }
 });
-
+*/
 window.onload = () => {
 
-  if (userIsAuthenticated) {
+  //if (userIsAuthenticated) {
     main();
-  }
+  //}
 }
 
 // Verifying if user is authenticated
@@ -37,17 +37,17 @@ chrome.runtime.onMessage.addListener(
     console.log(sender.tab ?
       "from a content script:" + sender.tab.url :
       "from the extension, token: ", request.token);
-    if (request.token == "hello") {
+    if (request && request.token == "hello") {
       sendResponse({ farewell: "goodbye" });
       chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
-        console.log('Answer: ', response.token);
+        console.log('Answer: ', response && response.token);
         chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000 }, function () {
           console.log('User token set as ' + 'hell yes');
         })
       });
       userIsAuthenticated = true;
       main();
-    } else if (request.token == "check") {
+    } else if (request && request.token == "check") {
       console.log('checking')
       chrome.storage.sync.get(['userToken', 'limit'], function (result) {
         console.log(result.limit, typeof result.limit)
@@ -57,7 +57,7 @@ chrome.runtime.onMessage.addListener(
             console.log('Invalid token');
           });
           chrome.runtime.sendMessage({ loggedOut: "yes" }, function (response) {
-            console.log('Answer: ', response.token);
+            console.log('Answer: ', response && response.token);
           });
         }
 
@@ -66,7 +66,7 @@ chrome.runtime.onMessage.addListener(
           main();
           console.log('Still logged in');
           chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
-            console.log('Answer: ', response.token);
+            console.log('Answer: ', response && response.token);
           });
         } else {
           console.log('User is not loggedin');
@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener(
             console.log('Invalid token');
           });
           chrome.runtime.sendMessage({ loggedIn: "loggedOut" }, function (response) {
-            console.log('Answer: ', response.token);
+            console.log('Answer: ', response && response.token);
           });
         }
       });
@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener(
         console.log('Invalid token');
       });
       chrome.runtime.sendMessage({ loggedIn: "loggedOut" }, function (response) {
-        console.log('Answer: ', response.token);
+        console.log('Answer: ', response && response.token);
       });
     }
   });
@@ -97,7 +97,7 @@ const main = () => {
   const videoRangeContainer = document.createElement('div');
   const textInputContainerElement = document.createElement('div');
   const videoInputElement = document.createElement('div');
-  const pagesNotes = document.createElement('div');
+  //const pagesNotes = document.createElement('div');
 
   addNoteBtnContainer.classList = 'btnContainer--hidden';
   addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
@@ -114,8 +114,8 @@ const main = () => {
   videoInputElement.classList = 'input-video--hidden input-video';
   videoInputElement.setAttribute('id', 'videoInputContainer');
 
-  pagesNotes.setAttribute('id', 'previouslyAddedNotes');
-  pagesNotes.classList = 'notes-notice notes-notice--hide';
+  //pagesNotes.setAttribute('id', 'previouslyAddedNotes');
+  //pagesNotes.classList = 'notes-notice notes-notice--hide';
 
   addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
@@ -153,23 +153,31 @@ const main = () => {
   <a id="download" class="btn btn-default">Download</a>
   `;
 
-  pagesNotes.innerHTML = (`
-  <p>This page has notes...</p>
-  <button class="btn btn-default" id="showPreviousNotes">Show notes</button>
-  <button class="btn btn-default" id="hidePreviousNotes" type="button">Dismiss</button>
-  `);
+  //pagesNotes.innerHTML = (`
+  //<p>This page has notes...</p>
+  //<button class="btn btn-default" id="showPreviousNotes">Show notes</button>
+  //<button class="btn btn-default" id="hidePreviousNotes" type="button">Dismiss</button>
+  //`);
 
-  const noteList = currentPageNotes();
+  //const noteList = currentPageNotes();
 
-  noteList.forEach(note => {
-    pagesNotes.innerHTML += noteFactory(note);
-  });
+ // noteList.forEach(note => {
+ //   pagesNotes.innerHTML += noteFactory(note);
+ // });
 
   addNoteBtnContainer.appendChild(noteTypeRow);
   addNoteBtnContainer.prepend(videoRangeContainer);
   addNoteBtnContainer.appendChild(textInputContainerElement);
   addNoteBtnContainer.appendChild(videoInputElement);
-  document.body.appendChild(pagesNotes);
+  //document.body.appendChild(pagesNotes);
+  // getting elements from the DOM
+  const div = document.createElement("div");
+  div.className = 'className';
+  div.appendChild(addNoteBtnContainer);
+  document.body.appendChild(div);
+
+  // always use appendChild and not innerHTML directly in existing page elements, 
+  // otherwise it can make the page stop working
 
   // add mouse move event listener to mouse to make button appear near it
   let addNoteBtnCont;
@@ -182,12 +190,20 @@ const main = () => {
   let videoRangeInputs;
   let textInputContainer;
   let videoInputContainer;
-  let previousNotesContainer;
-  let showPreviousNotes;
-  let hidePreviousNotes;
+  //let previousNotesContainer;
+  //let showPreviousNotes;
+  //let hidePreviousNotes;
 
   const videoPlayersLocation = [];
   const coords = [0, 0];
+
+  addNoteBtnCont = document.getElementById('addNoteBtnContainer');
+  addNoteBtn = document.getElementById('addNoteBtn');
+  noteTypeBtns = document.getElementById('noteTypes');
+  noteTypeBtnList = document.getElementsByClassName('noteTypeBtn');
+  videoRangeInputs = document.getElementsByClassName('range-input');
+  textInputContainer = document.getElementById('textInputContainer');
+  videoInputContainer = document.getElementById('videoInputContainer');
 
   // window events
   window.addEventListener('mousemove', e => {
@@ -252,6 +268,7 @@ const main = () => {
     if (!keys.includes(e.key)) {
       keys.push(e.key);
       if (keys.includes('W') && keys.includes('Shift')) {
+        console.log('AHH', addNoteBtnCont);
         if (addNoteBtnCont) {
           videoRangeContainer.classList.add('video-range--hidden');
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
@@ -327,44 +344,27 @@ const main = () => {
   window.onblur = clearKeys;
   // End get key commands to show button
 
-  // getting elements from the DOM
-  const div = document.createElement("div");
-  div.className = 'className';
-  div.appendChild(addNoteBtnContainer);
-  // always use appendChild and not innerHTML directly in existing page elements, 
-  // otherwise it can make the page stop working
-  if (document.querySelector('.className')) {
-    return;
-  }
+  //const damnyou = document.querySelectorAll('#previouslyAddedNotes')[0];
+  //previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
+  //showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  //hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
 
-  addNoteBtnCont = document.getElementById('addNoteBtnContainer');
-  addNoteBtn = document.getElementById('addNoteBtn');
-  noteTypeBtns = document.getElementById('noteTypes');
-  noteTypeBtnList = document.getElementsByClassName('noteTypeBtn');
-  videoRangeInputs = document.getElementsByClassName('range-input');
-  textInputContainer = document.getElementById('textInputContainer');
-  videoInputContainer = document.getElementById('videoInputContainer');
-  const damnyou = document.querySelectorAll('#previouslyAddedNotes')[0];
-  previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
-  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
-  hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
+  //showPreviousNotes.addEventListener('click', e => {
+  //  document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
-  showPreviousNotes.addEventListener('click', e => {
-    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+  //  previousNotesContainer.classList.remove('notes-notice--hide');
+  //  previousNotesContainer.classList.contains('hidden');
+  //});
 
-    previousNotesContainer.classList.remove('notes-notice--hide');
-    previousNotesContainer.classList.contains('hidden');
-  });
+  //hidePreviousNotes.addEventListener('click', e => {
+  //  document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
-  hidePreviousNotes.addEventListener('click', e => {
-    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
-
-    if (previousNotesContainer.classList.contains('notes-notice--hide')) {
-      previousNotesContainer.classList.add('hidden');
-    } else {
-      previousNotesContainer.classList.add('notes-notice--hide');
-    }
-  });
+  //  if (previousNotesContainer.classList.contains('notes-notice--hide')) {
+  //    previousNotesContainer.classList.add('hidden');
+  //  } else {
+  //    previousNotesContainer.classList.add('notes-notice--hide');
+  //  }
+  //});
 
   addNoteBtn && addNoteBtn.addEventListener('click', e => {
     if (noteTypeBtns) {
