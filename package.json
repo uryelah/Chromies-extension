@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.20.0",
     "canvas-toBlob": "^1.0.0",
     "file-saver": "^2.0.2",
     "html2canvas": "^1.0.0-rc.7",
