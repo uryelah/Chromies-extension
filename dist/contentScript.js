@@ -47,6 +47,7 @@ window.onload = () => {
   let overVideo;
   let videoRangeInputs;
 
+  const videoPlayersLocation = [];
   const coords = [0, 0];
 
   // window events
@@ -56,7 +57,18 @@ window.onload = () => {
     if (e.target.nodeName === 'VIDEO') {
       overVideo = e.target;
     } else {
-      overVideo = false;
+      let nothingFound = true;
+      Array.from(videoPlayersLocation).forEach((video, i) => {
+        if (e.clientX > video.x.start && e.clientX < video.x.end 
+          && e.clientY > video.y.start && e.clientY < video.y.end) {
+          overVideo = videoPlayers[i];
+          nothingFound = false;
+        }
+      });
+
+      if (nothingFound) {
+        overVideo = false;
+      }
     };
   });
 
@@ -68,7 +80,6 @@ window.onload = () => {
     if (videoRangeInputs) {
       videoRangeInputs[1].addEventListener('change', e => {
         videoElement.currentTime = Number.parseInt(e.target.value, 10) * 60;
-        console.log(videoElement)
       });
     }
   }
@@ -80,6 +91,7 @@ window.onload = () => {
         if (addNoteBtnCont) {
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
           videoRangeContainer.classList.add('video-range--hidden');
+
           // if cursor on video show note options under video play controls
           if (overVideo) {
             console.log(`Video at ${overVideo.currentTime} and with total duration of ${overVideo.duration}`);
@@ -108,15 +120,22 @@ window.onload = () => {
               input.value = Number.parseInt(overVideo.currentTime / 60, 10) + Number.parseFloat((((overVideo.currentTime / 60) % 1) * 0.6).toFixed(2)); // value in minutes
             });
 
+            let position;
+            // if video is an youtube video
             if (youtubeProgressBar) {
-              const position = await youtubeProgressBar.getBoundingClientRect();
+              position = await youtubeProgressBar.getBoundingClientRect();
 
               console.log(youtubeProgressBar.attributes['aria-valuetext']);
               const videoPercentage = youtubeProgressBar.attributes['aria-valuenow'].nodeValue / youtubeProgressBar.attributes['aria-valuemax'].nodeValue;
 
               addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage)}px, ${position.y + position.height}px)`;
+            // other videos
             } else {
-              addNoteBtnCont.style.transform = `translate(${0}px, ${0}px)`;
+              position = await overVideo.getBoundingClientRect();
+
+              const videoPercentage = ((overVideo.currentTime * 100) / overVideo.duration)/100;
+
+              addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage) - ( (position.x + (position.width * videoPercentage)) <= 350 ? 0 : 175)}px, ${position.y + position.height}px)`;
             }
           } else {
             addNoteBtnCont.style.transform = `translate(${coords[0]}px, ${coords[1]}px)`;
@@ -172,6 +191,20 @@ window.onload = () => {
 
   // Check if there's video at the page
   videoPlayers = document.getElementsByTagName('video');
+  Array.from(videoPlayers).forEach(videoPlayer => {
+    const position = videoPlayer.getBoundingClientRect();
+
+    videoPlayersLocation.push({
+      x: {
+        start: position.x,
+        end: position.x + position.width,
+      },
+      y: {
+        start: position.y,
+        end: position.y + position.height,
+      }
+    });
+  });
 };
 
 /*

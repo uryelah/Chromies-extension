@@ -16,6 +16,11 @@
   flex-direction: column;
 }
 
+.range-controll-group {
+  display: flex;
+  width: 350px;
+}
+
 .row--hidden,
 .btnContainer--hidden,
 .video-range--hidden {
