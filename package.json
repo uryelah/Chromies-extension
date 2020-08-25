@@ -11,6 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "canvas-toBlob": "^1.0.0",
+    "file-saver": "^2.0.2",
+    "html2canvas": "^1.0.0-rc.7",
+    "jquery": "^3.5.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   }

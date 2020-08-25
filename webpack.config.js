@@ -3,11 +3,18 @@ const path = require('path');
 module.exports = {
   entry: './src/index.js',
   mode: 'production',
+  entry: {
+    'main': './src/index.js',
+    'content': './src/content.js',
+  },
   output: {
-    filename: 'main.js',
     path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js'
   },
   devServer: {
     contentBase: './dist',
+  },
+  optimization: {
+    minimize: false
   },
 };

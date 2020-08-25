@@ -5,7 +5,6 @@
   z-index: 1000000;
 }
 
-
 .btn-default {
   margin-left: 0 !important;
   width: 250px;
@@ -16,6 +15,13 @@
   flex-direction: column;
 }
 
-.row--hidden, .btnContainer--hidden {
+.range-controll-group {
+  display: flex;
+  width: 350px;
+}
+
+.row--hidden,
+.btnContainer--hidden,
+.video-range--hidden {
   display: none;
 }
