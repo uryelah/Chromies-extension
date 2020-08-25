@@ -1,23 +1,85 @@
-const addNoteBtnContainer = document.createElement('div');
-const noteTypeRow = document.createElement('div');
-const videoRangeContainer = document.createElement('div');
+function getScreenshotOfElement(element, posX, posY, width, height, callback) {
+  html2canvas(element, {
+    onrendered: function (canvas) {
+      var context = canvas.getContext('2d');
+      var imageData = context.getImageData(posX, posY, width, height).data;
+      var outputCanvas = document.createElement('canvas');
+      var outputContext = outputCanvas.getContext('2d');
+      outputCanvas.width = width;
+      outputCanvas.height = height;
 
-addNoteBtnContainer.classList = 'btnContainer--hidden';
-addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
+      var idata = outputContext.createImageData(width, height);
+      idata.data.set(imageData);
+      outputContext.putImageData(idata, 0, 0);
+      callback(outputCanvas.toDataURL().replace("data:image/png;base64,", ""));
+    },
+    width: width,
+    height: height,
+    useCORS: true,
+    taintTest: false,
+    allowTaint: false
+  });
+}
 
-noteTypeRow.classList = 'note-btn-list row--hidden';
-noteTypeRow.setAttribute('id', 'noteTypes');
+let userIsAuthenticated = false;
 
-videoRangeContainer.classList = 'range-controll-group video-range--hidden';
-videoRangeContainer.setAttribute('id', 'rangeControllGroup');
+chrome.storage.sync.get(['userToken'], function (result) {
+  if (result.userToken === 'hell yes') {
+    userIsAuthenticated = true;
+    console.log('User token is ' + result.userToken);
+  } else {
+    console.log('User is not authenticated');
+  }
+});
 
-addNoteBtnContainer.innerHTML = `
+window.onload = () => {
+
+  if (userIsAuthenticated) {
+    main();
+  }
+}
+
+chrome.runtime.onMessage.addListener(
+  function (request, sender, sendResponse) {
+    console.log(sender.tab ?
+      "from a content script:" + sender.tab.url :
+      "from the extension, token: ", request.token);
+    if (request.token == "hello") {
+      sendResponse({ farewell: "goodbye" });
+      chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
+        console.log('Answer: ', response.token);
+        chrome.storage.sync.set({ userToken: 'hell yes' }, function () {
+          console.log('User token set as ' + 'hell yes');
+        })
+      });
+      userIsAuthenticated = true;
+      main();
+    }
+  });
+
+// Only execute content script if user is logged in
+const main = () => {
+
+  const addNoteBtnContainer = document.createElement('div');
+  const noteTypeRow = document.createElement('div');
+  const videoRangeContainer = document.createElement('div');
+
+  addNoteBtnContainer.classList = 'btnContainer--hidden';
+  addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
+
+  noteTypeRow.classList = 'note-btn-list row--hidden';
+  noteTypeRow.setAttribute('id', 'noteTypes');
+
+  videoRangeContainer.classList = 'range-controll-group video-range--hidden';
+  videoRangeContainer.setAttribute('id', 'rangeControllGroup');
+
+  addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
   Add Note
 </button>
 `;
 
-noteTypeRow.innerHTML = `
+  noteTypeRow.innerHTML = `
 <button type="button" data-type="text" class="btn-default noteTypeBtn">
   Plain/Text
 </button>
@@ -29,15 +91,14 @@ noteTypeRow.innerHTML = `
 </button>
 `;
 
-videoRangeContainer.innerHTML = `
+  videoRangeContainer.innerHTML = `
   <input type="number" class="range-input" id="dataRangeMin"/>
   <input type="number" class="range-input" id="dataRangeMax"/>
 `;
 
-addNoteBtnContainer.appendChild(noteTypeRow);
-addNoteBtnContainer.prepend(videoRangeContainer);
+  addNoteBtnContainer.appendChild(noteTypeRow);
+  addNoteBtnContainer.prepend(videoRangeContainer);
 
-window.onload = () => {
   // add mouse move event listener to mouse to make button appear near it
   let addNoteBtnCont;
   let addNoteBtn;
@@ -59,7 +120,7 @@ window.onload = () => {
     } else {
       let nothingFound = true;
       Array.from(videoPlayersLocation).forEach((video, i) => {
-        if (e.clientX > video.x.start && e.clientX < video.x.end 
+        if (e.clientX > video.x.start && e.clientX < video.x.end
           && e.clientY > video.y.start && e.clientY < video.y.end) {
           overVideo = videoPlayers[i];
           nothingFound = false;
@@ -129,13 +190,13 @@ window.onload = () => {
               const videoPercentage = youtubeProgressBar.attributes['aria-valuenow'].nodeValue / youtubeProgressBar.attributes['aria-valuemax'].nodeValue;
 
               addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage)}px, ${position.y + position.height}px)`;
-            // other videos
+              // other videos
             } else {
               position = await overVideo.getBoundingClientRect();
 
-              const videoPercentage = ((overVideo.currentTime * 100) / overVideo.duration)/100;
+              const videoPercentage = ((overVideo.currentTime * 100) / overVideo.duration) / 100;
 
-              addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage) - ( (position.x + (position.width * videoPercentage)) <= 350 ? 0 : 175)}px, ${position.y + position.height}px)`;
+              addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage) - ((position.x + (position.width * videoPercentage)) <= 350 ? 0 : 175)}px, ${position.y + position.height}px)`;
             }
           } else {
             addNoteBtnCont.style.transform = `translate(${coords[0]}px, ${coords[1]}px)`;
@@ -205,16 +266,12 @@ window.onload = () => {
       }
     });
   });
-};
 
-/*
-Video in page?
-Video playing?
-currentTime/60 for minutes   getCurrentTime
-duration/60 for minutes      getDuration
-
-seekable
-
-*/
+  getScreenshotOfElement(document.getElementById("question-header")).get(0, 0, 0, 100, 100, function(data) {
+    // in the data variable there is the base64 image
+    // exmaple for displaying the image in an <img>
+    document.getElementsByTagName('img')[0].attr("src", "data:image/png;base64,"+data);
+});
+}
 
 // @sourceURL=contentScript.js 

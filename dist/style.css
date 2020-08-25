@@ -107,3 +107,7 @@ span {
 .flex-row div {
   margin-right: 5px;
 }
+
+.hidden {
+  display: none;
+}

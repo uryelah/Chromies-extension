@@ -7,7 +7,7 @@
     <title>Login Form</title>
   </head>
   <body>
-    <div class="hero">
+    <div id="auth-form" class="hero">
       <div class="form-box">
         <div class="button-box">
           <div id="btn"></div>
@@ -18,10 +18,10 @@
             Register
           </button>
         </div>
-        <form class="input-group login" id="login">
+        <div class="input-group login" id="login">
           <input type="text" class="input-field" placeholder="Username" required />
           <input
-            type="text"
+            type="password"
             class="input-field"
             placeholder="Password"
             required
@@ -37,17 +37,24 @@
         <form class="input-group register" id="register">
           <input type="text" class="input-field" placeholder="Username" required />
           <input
-            type="text"
+            type="password"
             class="input-field"
             placeholder="Password"
             required
           />
-          <input type="checkbox" class="check-box" /><span
-            >I agree to the terms and conditions</span
-          >
-          <button type="submit" class="submit-btn">Register</button>
-        </form>
+          <div class="flex-row">
+            <div>
+              <input type="checkbox" class="check-box" />
+            </div>
+            <p>I agree to the terms and conditions</p>
+          </div>
+          <button type="button" class="submit-btn">Register</button>
+        </div>
       </div>
+    </div>
+    <div id="authenticated" class="hidden authenticated">
+      <h1>Yoooo!</h1>
+      <p>We are in fam</p>
     </div>
     <script src="./main.js"></script>
   </body>
