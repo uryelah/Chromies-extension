@@ -21,12 +21,14 @@ window.onload = () => {
     document.getElementById('login-btn').addEventListener('click', e => {
       x.style.left = "5px";
       y.style.left = "450px";
+      y.style.top = "-10px";
       z.style.left = "0";
     });
 
     document.getElementById('register-btn').addEventListener('click', e => {
       x.style.left = "-400px";
-      y.style.left = "10px";
+      y.style.left = "410px";
+      y.style.top = "-10px";
       z.style.left = "100px";
     });
 
