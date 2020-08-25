@@ -1,32 +1,17 @@
-function getScreenshotOfElement(element, posX, posY, width, height, callback) {
-  html2canvas(element, {
-    onrendered: function (canvas) {
-      var context = canvas.getContext('2d');
-      var imageData = context.getImageData(posX, posY, width, height).data;
-      var outputCanvas = document.createElement('canvas');
-      var outputContext = outputCanvas.getContext('2d');
-      outputCanvas.width = width;
-      outputCanvas.height = height;
+import 'canvas-toBlob';
+import { handleScreenshot } from './noteActions';
 
-      var idata = outputContext.createImageData(width, height);
-      idata.data.set(imageData);
-      outputContext.putImageData(idata, 0, 0);
-      callback(outputCanvas.toDataURL().replace("data:image/png;base64,", ""));
-    },
-    width: width,
-    height: height,
-    useCORS: true,
-    taintTest: false,
-    allowTaint: false
-  });
-}
 
 let userIsAuthenticated = false;
 
 chrome.storage.sync.get(['userToken'], function (result) {
   if (result.userToken === 'hell yes') {
     userIsAuthenticated = true;
+    main();
     console.log('User token is ' + result.userToken);
+    chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
+      console.log('Answer: ', response.token);
+    });
   } else {
     console.log('User is not authenticated');
   }
@@ -46,15 +31,53 @@ chrome.runtime.onMessage.addListener(
       "from the extension, token: ", request.token);
     if (request.token == "hello") {
       sendResponse({ farewell: "goodbye" });
-      chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
+      chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
         console.log('Answer: ', response.token);
-        chrome.storage.sync.set({ userToken: 'hell yes' }, function () {
+        chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000}, function () {
           console.log('User token set as ' + 'hell yes');
         })
       });
       userIsAuthenticated = true;
       main();
-    }
+    } else if (request.token == "check") {
+      console.log('checking')
+      chrome.storage.sync.get(['userToken', 'limit'], function (result) {
+        console.log(result.limit, typeof result.limit)
+        if (result.limit < Date.now()) {
+          console.log('Expired token');
+          chrome.storage.sync.remove(['userToken', 'limit'], () => {
+            console.log('Invalid token');
+          });
+          chrome.runtime.sendMessage({ loggedOut: "yes" }, function (response) {
+            console.log('Answer: ', response.token);
+          });
+        }
+
+        if (result.userToken && result.userToken === 'hell yes') {
+          userIsAuthenticated = true;
+          main();
+          console.log('Still logged in');
+          chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
+            console.log('Answer: ', response.token);
+          });
+        } else {
+          console.log('User is not loggedin');
+          chrome.storage.sync.remove(['userToken', 'limit'], () => {
+            console.log('Invalid token');
+          });
+          chrome.runtime.sendMessage({ loggedIn: "loggedOut" }, function (response) {
+            console.log('Answer: ', response.token);
+          });
+        }
+      });
+    } else {
+      chrome.storage.sync.remove(['userToken', 'limit'], () => {
+        console.log('Invalid token');
+      });
+      chrome.runtime.sendMessage({ loggedIn: "loggedOut" }, function (response) {
+        console.log('Answer: ', response.token);
+      });
+  }
   });
 
 // Only execute content script if user is logged in
@@ -106,6 +129,7 @@ const main = () => {
   let noteTypeBtnList;
   let videoPlayers;
   let overVideo;
+  let overElement;
   let videoRangeInputs;
 
   const videoPlayersLocation = [];
@@ -129,6 +153,7 @@ const main = () => {
 
       if (nothingFound) {
         overVideo = false;
+        overElement = e.target;
       }
     };
   });
@@ -145,6 +170,19 @@ const main = () => {
     }
   }
 
+  const noteTypeEvents = (overVideo, overElement) => {
+    Array.from(noteTypeBtnList).forEach(button => {
+      button.addEventListener('click', e => {
+        const type = e.target.dataset.type;
+        console.log(`Handle note of type: ${type}`);
+  
+        if (type === 'image') {
+          handleScreenshot(overVideo, overElement);
+        }
+      });
+    });
+  }
+
   window.onkeydown = async function (e) {
     if (!keys.includes(e.key)) {
       keys.push(e.key);
@@ -152,6 +190,8 @@ const main = () => {
         if (addNoteBtnCont) {
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
           videoRangeContainer.classList.add('video-range--hidden');
+
+          noteTypeEvents(overVideo, overElement);
 
           // if cursor on video show note options under video play controls
           if (overVideo) {
@@ -215,9 +255,6 @@ const main = () => {
   }
 
   function clearKeys() {
-    for (n in keys) {
-      n = false
-    };
     keys.length = 0;
   }
 
@@ -239,15 +276,10 @@ const main = () => {
   videoRangeInputs = document.getElementsByClassName('range-input');
 
   addNoteBtn.addEventListener('click', e => {
+    console.log(noteTypeBtns);
     if (noteTypeBtns) {
-      noteTypeBtns.classList.toggle('row--hidden');
+      noteTypeBtns.classList.remove('row--hidden');
     };
-  });
-
-  Array.from(noteTypeBtnList).forEach(button => {
-    button.addEventListener('click', e => {
-      console.log(`Handle note of type: ${e.target.dataset.type}`);
-    });
   });
 
   // Check if there's video at the page
@@ -267,11 +299,6 @@ const main = () => {
     });
   });
 
-  getScreenshotOfElement(document.getElementById("question-header")).get(0, 0, 0, 100, 100, function(data) {
-    // in the data variable there is the base64 image
-    // exmaple for displaying the image in an <img>
-    document.getElementsByTagName('img')[0].attr("src", "data:image/png;base64,"+data);
-});
 }
 
 // @sourceURL=contentScript.js 

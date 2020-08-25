@@ -14,7 +14,7 @@
       "matches": ["https://*/*"],
       "run_at": "document_idle",
       "css": ["./contentStyles.css"],
-      "js": ["./contentScript.js"]
+      "js": ["./content.js"]
     }
   ],
   "icons": {
