@@ -3,13 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./style.css" />
+    <title>Login Form</title>
   </head>
-  <body class="container">
-    <div>Unnamed note taker</div>
-
+  <body>
+    <div class="hero">
+      <div class="form-box">
+        <div class="button-box">
+          <div id="btn"></div>
+          <button type="button" class="toggle-btn" id="login-btn">
+            Log In
+          </button>
+          <button type="button" class="toggle-btn" id="register-btn">
+            Register
+          </button>
+        </div>
+        <form class="input-group login" id="login">
+          <input type="text" class="input-field" placeholder="Email" required />
+          <input
+            type="text"
+            class="input-field"
+            placeholder="Password"
+            required
+          />
+          <div class="flex-row">
+            <div>
+              <input type="checkbox" class="check-box" />
+            </div>
+            <p>Remember Password</p>
+          </div>
+          <button type="submit" class="submit-btn">Log In</button>
+        </form>
+        <form class="input-group register" id="register">
+          <input type="text" class="input-field" placeholder="Email" required />
+          <input
+            type="text"
+            class="input-field"
+            placeholder="Password"
+            required
+          />
+          <input type="checkbox" class="check-box" /><span
+            >I agree to the terms and conditions</span
+          >
+          <button type="submit" class="submit-btn">Register</button>
+        </form>
+      </div>
+    </div>
     <script src="./main.js"></script>
   </body>
 </html>

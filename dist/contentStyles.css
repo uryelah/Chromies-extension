@@ -16,6 +16,8 @@
   flex-direction: column;
 }
 
-.row--hidden, .btnContainer--hidden {
+.row--hidden,
+.btnContainer--hidden,
+.video-range--hidden {
   display: none;
 }
