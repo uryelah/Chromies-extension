@@ -35,9 +35,27 @@
 
 .video-player {
   background-color: #000;
+  color: #fff;
   position: absolute;
   width: 100%;
   top: 100px;
+}
+
+.notes-notice {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;  
+  padding: 20px 30px;
+  border-radius: 10px;
+  background-color: #fff;
+  background-image: linear-gradient(to top, #ff105f, #ffad06);
+  z-index: 10000000000;
+}
+
+.notes-notice--hide .note {
+  display: none;
 }
 
 .hidden,

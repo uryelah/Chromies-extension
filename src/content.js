@@ -1,5 +1,13 @@
 import 'canvas-toBlob';
 import { handleScreenshot, handleText, handleVideo } from './noteActions';
+import { currentPageNotes } from './getNotes';
+
+const noteFactory = (note) => (`
+  <div class="previous-note note" id="${note.id}">
+    <p><strong>Create at: ${new Date(note.createdAt).toLocaleDateString()}</strong></p>
+    <p>${note.body}</p>
+  </div>
+`);
 
 let userIsAuthenticated = false;
 
@@ -23,6 +31,7 @@ window.onload = () => {
   }
 }
 
+// Verifying if user is authenticated
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     console.log(sender.tab ?
@@ -32,7 +41,7 @@ chrome.runtime.onMessage.addListener(
       sendResponse({ farewell: "goodbye" });
       chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
         console.log('Answer: ', response.token);
-        chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000}, function () {
+        chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000 }, function () {
           console.log('User token set as ' + 'hell yes');
         })
       });
@@ -76,17 +85,19 @@ chrome.runtime.onMessage.addListener(
       chrome.runtime.sendMessage({ loggedIn: "loggedOut" }, function (response) {
         console.log('Answer: ', response.token);
       });
-  }
+    }
   });
 
 // Only execute content script if user is logged in
 const main = () => {
+  // Add existent page nodes to document
 
   const addNoteBtnContainer = document.createElement('div');
   const noteTypeRow = document.createElement('div');
   const videoRangeContainer = document.createElement('div');
   const textInputContainerElement = document.createElement('div');
   const videoInputElement = document.createElement('div');
+  const pagesNotes = document.createElement('div');
 
   addNoteBtnContainer.classList = 'btnContainer--hidden';
   addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
@@ -102,6 +113,9 @@ const main = () => {
 
   videoInputElement.classList = 'input-video--hidden input-video';
   videoInputElement.setAttribute('id', 'videoInputContainer');
+
+  pagesNotes.setAttribute('id', 'previouslyAddedNotes');
+  pagesNotes.classList = 'notes-notice notes-notice--hide';
 
   addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
@@ -139,10 +153,23 @@ const main = () => {
   <a id="download" class="btn btn-default">Download</a>
   `;
 
+  pagesNotes.innerHTML = (`
+  <p>This page has notes...</p>
+  <button class="btn btn-default" id="showPreviousNotes">Show notes</button>
+  <button class="btn btn-default" id="hidePreviousNotes" type="button">Dismiss</button>
+  `);
+
+  const noteList = currentPageNotes();
+
+  noteList.forEach(note => {
+    pagesNotes.innerHTML += noteFactory(note);
+  });
+
   addNoteBtnContainer.appendChild(noteTypeRow);
   addNoteBtnContainer.prepend(videoRangeContainer);
   addNoteBtnContainer.appendChild(textInputContainerElement);
   addNoteBtnContainer.appendChild(videoInputElement);
+  document.body.appendChild(pagesNotes);
 
   // add mouse move event listener to mouse to make button appear near it
   let addNoteBtnCont;
@@ -155,6 +182,9 @@ const main = () => {
   let videoRangeInputs;
   let textInputContainer;
   let videoInputContainer;
+  let previousNotesContainer;
+  let showPreviousNotes;
+  let hidePreviousNotes;
 
   const videoPlayersLocation = [];
   const coords = [0, 0];
@@ -170,7 +200,7 @@ const main = () => {
       Array.from(videoPlayersLocation).forEach((video, i) => {
         if (e.clientX > video.x.start && e.clientX < video.x.end
           && e.clientY > video.y.start && e.clientY < video.y.end) {
-            console.log('pass?');
+          console.log('pass?');
           overVideo = videoPlayers[i];
           nothingFound = false;
         }
@@ -184,12 +214,12 @@ const main = () => {
   });
 
   // Startget key commands to get button
-  const keys = []
+  const keys = [];
 
   const checkRangeChange = (videoElement, videoRangeInputs) => {
     // Advance video when changing range max
     if (videoRangeInputs) {
-      videoRangeInputs[1].addEventListener('change', e => {
+      videoRangeInputs[1] && videoRangeInputs[1].addEventListener('change', e => {
         videoElement.currentTime = Number.parseInt(e.target.value, 10) * 60;
       });
     }
@@ -197,7 +227,7 @@ const main = () => {
 
   const noteTypeEvents = (overVideo, overElement) => {
     Array.from(noteTypeBtnList).forEach(button => {
-      button.addEventListener('click', e => {
+      button && button.addEventListener('click', e => {
         const type = e.target.dataset.type;
         console.log(`Handle note of type: ${type}`);
         textInputContainer.classList.add('input-text--hidden');
@@ -232,7 +262,7 @@ const main = () => {
           if (overVideo) {
             console.log(`Video at ${overVideo.currentTime} and with total duration of ${overVideo.duration}`);
             console.log(`Video currently ${overVideo.paused ? 'paused' : 'playing'}`);
-            
+
             videoRangeContainer.classList.remove('video-range--hidden');
             const youtubeProgressBar = document.getElementsByClassName('ytp-progress-bar')[0];
 
@@ -303,7 +333,9 @@ const main = () => {
   div.appendChild(addNoteBtnContainer);
   // always use appendChild and not innerHTML directly in existing page elements, 
   // otherwise it can make the page stop working
-  document.body.appendChild(div);
+  if (document.querySelector('.className')) {
+    return;
+  }
 
   addNoteBtnCont = document.getElementById('addNoteBtnContainer');
   addNoteBtn = document.getElementById('addNoteBtn');
@@ -312,8 +344,29 @@ const main = () => {
   videoRangeInputs = document.getElementsByClassName('range-input');
   textInputContainer = document.getElementById('textInputContainer');
   videoInputContainer = document.getElementById('videoInputContainer');
-  
-  addNoteBtn.addEventListener('click', e => {
+  const damnyou = document.querySelectorAll('#previouslyAddedNotes')[0];
+  previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
+
+  showPreviousNotes.addEventListener('click', e => {
+    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+
+    previousNotesContainer.classList.remove('notes-notice--hide');
+    previousNotesContainer.classList.contains('hidden');
+  });
+
+  hidePreviousNotes.addEventListener('click', e => {
+    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+
+    if (previousNotesContainer.classList.contains('notes-notice--hide')) {
+      previousNotesContainer.classList.add('hidden');
+    } else {
+      previousNotesContainer.classList.add('notes-notice--hide');
+    }
+  });
+
+  addNoteBtn && addNoteBtn.addEventListener('click', e => {
     if (noteTypeBtns) {
       document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
       noteTypeBtns.classList.remove('row--hidden');
