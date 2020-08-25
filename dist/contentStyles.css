@@ -20,7 +20,7 @@
   width: 350px;
 }
 
-.input-text {
+.input-text, .input-video {
   display: flex;
   flex-direction: column;
 }
@@ -33,9 +33,17 @@
   width: 100%;
 }
 
+.video-player {
+  background-color: #000;
+  position: absolute;
+  width: 100%;
+  top: 100px;
+}
+
 .hidden,
 .row--hidden,
 .btnContainer--hidden,
+.input-video--hidden,
 .video-range--hidden,
 .input-text--hidden {
   display: none;

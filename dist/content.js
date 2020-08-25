@@ -7375,16 +7375,16 @@ const handleScreenshot = (overVideo, overElement) => {
 
   } else {
     // not great, taking the screensht of the whole doc could be a better idea
-    html2canvas_default()(overElement.parentNode).then(function(canvas) {
+    html2canvas_default()(overElement.parentNode).then(function (canvas) {
       const id = `cnv-note-${Date.now()}`;
       canvas.setAttribute('id', id);
       canvas.style.height = `${100}%`;
       canvas.style.width = `${100}%`;
       document.body.appendChild(canvas);
 
-        document.getElementById(id).toBlob(function (blob) {
-          Object(FileSaver_min["saveAs"])(blob, `${overElement.ownerDocument.title}.png`);
-        });
+      document.getElementById(id).toBlob(function (blob) {
+        Object(FileSaver_min["saveAs"])(blob, `${overElement.ownerDocument.title}.png`);
+      });
     });
   }
 };
@@ -7403,6 +7403,53 @@ const handleText = (video, input) => {
   };
   return input.value;
 };
+
+
+const handleVideo = (video, input) => {
+  let shouldStop = false;
+  let stopped = false;
+  const downloadLink = document.getElementById('download');
+  const stopButton = document.getElementById('stop');
+  const player = document.getElementById('player');
+
+  const handleSuccess = (stream) => {
+
+  };
+
+  navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+    .then((stream) => {
+      // set video player
+      player.srcObject = stream;
+      player.play();
+      //
+      const options = { mimeType: 'video/webm' };
+      const mediaRecorder = new MediaRecorder(stream, options);
+      var chunks = [];
+      mediaRecorder.start();
+      console.log(mediaRecorder)
+
+      stopButton.addEventListener('click', e => {
+        e.preventDefault();
+
+        player.stop();
+        mediaRecorder.stop();
+      });
+
+      mediaRecorder.onstop = function (e) {
+        console.log("data available after MediaRecorder.stop() called.");
+
+        // does not work on windows media player, working on browser!
+        downloadLink.href = URL.createObjectURL(new Blob(chunks, { 'type': 'video/webm; codecs=opus' }));
+        downloadLink.download = 'acetest.webm';
+      };
+
+      mediaRecorder.ondataavailable = function (e) {
+        chunks.push(e.data);
+      }
+    })
+};
+
+
 
 
 // CONCATENATED MODULE: ./src/content.js
@@ -7494,6 +7541,7 @@ const main = () => {
   const noteTypeRow = document.createElement('div');
   const videoRangeContainer = document.createElement('div');
   const textInputContainerElement = document.createElement('div');
+  const videoInputElement = document.createElement('div');
 
   addNoteBtnContainer.classList = 'btnContainer--hidden';
   addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
@@ -7506,6 +7554,9 @@ const main = () => {
 
   textInputContainerElement.classList = 'input-text--hidden input-text';
   textInputContainerElement.setAttribute('id', 'textInputContainer');
+
+  videoInputElement.classList = 'input-video--hidden input-video';
+  videoInputElement.setAttribute('id', 'videoInputContainer');
 
   addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
@@ -7537,9 +7588,16 @@ const main = () => {
   </button>
   `;
 
+  videoInputElement.innerHTML = `
+  <video id="player" class="video-player" controls></video>
+  <button id="stop">Stop</button>
+  <a id="download" class="btn btn-default">Download</a>
+  `;
+
   addNoteBtnContainer.appendChild(noteTypeRow);
   addNoteBtnContainer.prepend(videoRangeContainer);
   addNoteBtnContainer.appendChild(textInputContainerElement);
+  addNoteBtnContainer.appendChild(videoInputElement);
 
   // add mouse move event listener to mouse to make button appear near it
   let addNoteBtnCont;
@@ -7551,6 +7609,7 @@ const main = () => {
   let overElement;
   let videoRangeInputs;
   let textInputContainer;
+  let videoInputContainer;
 
   const videoPlayersLocation = [];
   const coords = [0, 0];
@@ -7597,6 +7656,7 @@ const main = () => {
         const type = e.target.dataset.type;
         console.log(`Handle note of type: ${type}`);
         textInputContainer.classList.add('input-text--hidden');
+        videoInputContainer.classList.add('input-video--hidden');
 
         if (type === 'image') {
           handleScreenshot(overVideo, overElement);
@@ -7604,6 +7664,10 @@ const main = () => {
           document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
           textInputContainer.classList.remove('input-text--hidden');
           handleText(overVideo ? videoRangeInputs : false, textInputContainer);
+        } else if (type === 'video') {
+          document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
+          videoInputContainer.classList.remove('input-video--hidden');
+          handleVideo(overVideo ? videoRangeInputs : false, overElement);
         }
       });
     });
@@ -7614,6 +7678,7 @@ const main = () => {
       keys.push(e.key);
       if (keys.includes('W') && keys.includes('Shift')) {
         if (addNoteBtnCont) {
+          videoRangeContainer.classList.add('video-range--hidden');
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
 
           noteTypeEvents(overVideo, overElement);
@@ -7665,7 +7730,6 @@ const main = () => {
               addNoteBtnCont.style.transform = `translate(${position.x + (position.width * videoPercentage) - ((position.x + (position.width * videoPercentage)) <= 350 ? 0 : 175)}px, ${position.y + position.height}px)`;
             }
           } else {
-            videoRangeContainer.classList.add('video-range--hidden');
             addNoteBtnCont.style.transform = `translate(${coords[0]}px, ${coords[1]}px)`;
           }
         }
@@ -7702,7 +7766,8 @@ const main = () => {
   noteTypeBtnList = document.getElementsByClassName('noteTypeBtn');
   videoRangeInputs = document.getElementsByClassName('range-input');
   textInputContainer = document.getElementById('textInputContainer');
-
+  videoInputContainer = document.getElementById('videoInputContainer');
+  
   addNoteBtn.addEventListener('click', e => {
     if (noteTypeBtns) {
       document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');

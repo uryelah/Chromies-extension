@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+
+<body>
+	<a id="download" href="">Download</button>
+		<button value="button" id="stop">Stop</button>
+		<video id="player"></video>
+
+		<script>
+			window.onload = () => {
+				const downloadLink = document.getElementById('download');
+				const stopVideo = document.getElementById('stop');
+				/*
+						mediaRecorder.addEventListener('dataavailable', function(e) {
+							console.log('Ahhhhh')
+							if (e.data.size > 0) {
+								recordedChunks.push(e.data);
+							}
+				
+							if(shouldStop === true && stopped === false) {
+								//mediaRecorder.stop();
+								stopped = true;
+							}
+						});
+				*/
+
+				navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+					.then((stream) => {
+						const options = { mimeType: 'video/webm' };
+						const recordedChunks = [];
+						const mediaRecorder = new MediaRecorder(stream, options);
+						var chunks = [];
+						mediaRecorder.start();
+						console.log(mediaRecorder)
+
+
+						stopVideo.addEventListener('click', e => {
+							e.preventDefault();
+
+							mediaRecorder.stop();
+						});
+
+						mediaRecorder.onstop = function (e) {
+							console.log("data available after MediaRecorder.stop() called.");
+
+							downloadLink.href = URL.createObjectURL(new Blob(chunks, { 'type': 'video/webm; codecs=opus' }));
+							downloadLink.download = 'acetest.webm';
+
+							var audio = document.createElement('video');
+							audio.controls = true;
+							var blob = new Blob(chunks, { 'type': 'video/webm; codecs=opus' });
+							var audioURL = window.URL.createObjectURL(blob);
+							audio.src = audioURL;
+							document.body.appendChild(audio);
+							console.log("recorder stopped", audioURL);
+						};
+
+						mediaRecorder.ondataavailable = function (e) {
+							chunks.push(e.data);
+						}
+					});
+
+			};
+
+
+		</script>
+</body>
+
+</html>
