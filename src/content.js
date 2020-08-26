@@ -141,19 +141,19 @@ const main = () => {
   pagesNotes.classList = 'notes-notice notes-notice--hide';
 
   addNoteBtnContainer.innerHTML = `
-<button type="button" class="btn-default modal-test" id="addNoteBtn">
+<button type="button" class="buttao-default modal-test" id="addNoteBtn">
   Add Note
 </button>
 `;
 
   noteTypeRow.innerHTML = `
-<button type="button" data-type="text" class="btn-default noteTypeBtn">
+<button type="button" data-type="text" class="buttao-default noteTypeBtn">
   Plain/Text
 </button>
-<button type="button" data-type="image" class="btn-default noteTypeBtn">
+<button type="button" data-type="image" class="buttao-default noteTypeBtn">
   Screenshot
 </button>
-<button type="button" data-type="video" class="btn-default noteTypeBtn">
+<button type="button" data-type="video" class="buttao-default noteTypeBtn">
   Video
 </button>
 `;
@@ -165,7 +165,7 @@ const main = () => {
 
   textInputContainerElement.innerHTML = `
   <textarea maxlength="50" class="text-input" id="textInput"></textarea> 
-  <button type="button" class="btn-default text-input-btn" id="textInputBtn">
+  <button type="button" class="buttao-default text-input-btn" id="textInputBtn">
     Add
   </button>
   `;
@@ -173,15 +173,15 @@ const main = () => {
   videoInputElement.innerHTML = `
   <video id="player" class="video-player" controls></video>
   <button id="stop">Stop</button>
-  <a id="download" class="btn btn-default">Download</a>
+  <a id="download" class="btn buttao-default">Download</a>
   `;
 
   pagesNotes.innerHTML = (`
   <button type="button" class="close-ico" id="closePagesNotes">❌</button>
   <button type="button" class="open-ico" id="normalPagesNotes">Notes</button>
   <p>This page has notes...</p>
-  <button class="btn btn-default" id="showPreviousNotes">Show notes</button>
-  <button class="btn btn-default" id="hidePreviousNotes" type="button">Hide notes</button>
+  <button class="btn buttao-default" id="showPreviousNotes">Show notes</button>
+  <button class="btn buttao-default" id="hidePreviousNotes" type="button">Hide notes</button>
   `);
 
   const noteList = currentPageNotes();

@@ -5,9 +5,13 @@
   z-index: 1000000;
 }
 
-.btn-default {
+.buttao-default {
   margin-left: 0 !important;
   width: 250px;
+  padding: 8px 10px;
+  min-width: 100%;
+  color: #fff;
+  font-weight: 600;
 }
 
 .note-btn-list {
