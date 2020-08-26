@@ -1,21 +1,39 @@
 import 'canvas-toBlob';
 import { handleScreenshot, handleText, handleVideo } from './noteActions';
-//import { currentPageNotes } from './getNotes';
+import { currentPageNotes } from './getNotes';
 
-const noteFactory = (note) => (`
-  <div class="previous-note note" id="${note.id}">
+const noteFactory = (note) => {
+  const start = note.videoTimeStamp ? JSON.parse(note.videoTimeStamp)[0] :  '';
+  const end = note.videoTimeStamp ? JSON.parse(note.videoTimeStamp)[1] :  '';
+  return(`
+  <div data-start=${start} data-end=${end} class="previous-note note ${note.videoTimeStamp ? 'video-note-line' : ''}" id="${note.id}">
     <p><strong>Create at: ${new Date(note.createdAt).toLocaleDateString()}</strong></p>
-    <p>${note.body}</p>
+    ${
+      note.body && `<p>${note.body}</p>`
+    }
+    ${
+      note.imgLink && `<img src="${note.imgLink}" width="320" />`
+    }
+    ${
+      note.videoLink && (`
+      <video width="320" height="240" controls>
+        <source src="${note.videoLink}" type="video/webm"/>
+      </video>`)
+    }
+    ${
+      note.videoTimeStamp && (`
+<p>Video time stamps: <em>${start} ${end}</em></p>
+      `)
+    }
   </div>
-`);
+`)};
 
 let userIsAuthenticated = false;
-/*
+
 chrome.storage.sync.get(['userToken'], function (result) {
   if (result.userToken === 'hell yes') {
     userIsAuthenticated = true;
     main();
-    console.log('User token is ' + result.userToken);
     chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
       console.log('Answer: ', response.token);
     });
@@ -23,12 +41,12 @@ chrome.storage.sync.get(['userToken'], function (result) {
     console.log('User is not authenticated');
   }
 });
-*/
+
 window.onload = () => {
 
-  //if (userIsAuthenticated) {
+  if (userIsAuthenticated) {
     main();
-  //}
+  }
 }
 
 // Verifying if user is authenticated
@@ -91,13 +109,13 @@ chrome.runtime.onMessage.addListener(
 // Only execute content script if user is logged in
 const main = () => {
   // Add existent page nodes to document
-
+  const pageVideo = document.querySelector('video');
   const addNoteBtnContainer = document.createElement('div');
   const noteTypeRow = document.createElement('div');
   const videoRangeContainer = document.createElement('div');
   const textInputContainerElement = document.createElement('div');
   const videoInputElement = document.createElement('div');
-  //const pagesNotes = document.createElement('div');
+  const pagesNotes = document.createElement('div');
 
   addNoteBtnContainer.classList = 'btnContainer--hidden';
   addNoteBtnContainer.setAttribute('id', 'addNoteBtnContainer');
@@ -114,8 +132,8 @@ const main = () => {
   videoInputElement.classList = 'input-video--hidden input-video';
   videoInputElement.setAttribute('id', 'videoInputContainer');
 
-  //pagesNotes.setAttribute('id', 'previouslyAddedNotes');
-  //pagesNotes.classList = 'notes-notice notes-notice--hide';
+  pagesNotes.setAttribute('id', 'previouslyAddedNotes');
+  pagesNotes.classList = 'notes-notice notes-notice--hide';
 
   addNoteBtnContainer.innerHTML = `
 <button type="button" class="btn-default modal-test" id="addNoteBtn">
@@ -153,28 +171,64 @@ const main = () => {
   <a id="download" class="btn btn-default">Download</a>
   `;
 
-  //pagesNotes.innerHTML = (`
-  //<p>This page has notes...</p>
-  //<button class="btn btn-default" id="showPreviousNotes">Show notes</button>
-  //<button class="btn btn-default" id="hidePreviousNotes" type="button">Dismiss</button>
-  //`);
+  pagesNotes.innerHTML = (`
+  <button type="button" class="close-ico" id="closePagesNotes">❌</button>
+  <button type="button" class="open-ico" id="normalPagesNotes">Notes</button>
+  <p>This page has notes...</p>
+  <button class="btn btn-default" id="showPreviousNotes">Show notes</button>
+  <button class="btn btn-default" id="hidePreviousNotes" type="button">Hide notes</button>
+  `);
 
-  //const noteList = currentPageNotes();
+  const noteList = currentPageNotes();
+  const noteItems = document.createElement('div');
+  const videoNoteItems = document.createElement('div');
+  videoNoteItems.setAttribute('id', 'underVideoNotes');
 
- // noteList.forEach(note => {
- //   pagesNotes.innerHTML += noteFactory(note);
- // });
+  noteItems.classList = 'noteItems';
+  noteItems.setAttribute('id', 'noteItems');
 
+  noteList.forEach(note => {
+    // if note has video time stamp
+    if (note.videoTimeStamp && pageVideo) {
+      videoNoteItems.innerHTML += noteFactory(note);
+    } else {
+      noteItems.innerHTML += noteFactory(note);
+    }
+  });
+
+  pagesNotes.appendChild(noteItems);
+  
   addNoteBtnContainer.appendChild(noteTypeRow);
   addNoteBtnContainer.prepend(videoRangeContainer);
   addNoteBtnContainer.appendChild(textInputContainerElement);
   addNoteBtnContainer.appendChild(videoInputElement);
-  //document.body.appendChild(pagesNotes);
+  document.body.appendChild(videoNoteItems);
+  document.body.appendChild(pagesNotes);
   // getting elements from the DOM
   const div = document.createElement("div");
   div.className = 'className';
   div.appendChild(addNoteBtnContainer);
   document.body.appendChild(div);
+
+
+  Array.from(videoNoteItems.children).forEach(videoNote => {
+    // time in seconds
+    const videoDimensions = videoNote.getBoundingClientRect();
+    const fullSize = pageVideo.duration;
+    const timeStamps = [videoNote.dataset.start, videoNote.dataset.end];
+    const startPercentage = Number.parseFloat(videoNote.dataset.start) / fullSize;
+
+    videoNote.style.position = 'absolute';
+    videoNote.style.left = `${(startPercentage * videoDimensions.width) + videoDimensions.x <= (videoDimensions.width - 100) ? (startPercentage * videoDimensions.width) + videoDimensions.x  : (videoDimensions.width - 100)}px`;
+    videoNote.style.top = `${videoDimensions.height + videoDimensions.y}px`;
+    videoNote.stye.display = 'block !important';
+    videoNote.style.backgroundImage = 'linear-gradient(to top, #ff105f99, #ffad0699)';
+    videoNote.style.padding = '3px 5px';
+    videoNote.style.width = '100px';
+    videoNote.style.overflow = 'hidden';
+    videoNote.style.textOverflow = 'ellipsis';
+    console.log(`At ${startPercentage}% of the video of ${fullSize}`);
+  });
 
   // always use appendChild and not innerHTML directly in existing page elements, 
   // otherwise it can make the page stop working
@@ -190,20 +244,24 @@ const main = () => {
   let videoRangeInputs;
   let textInputContainer;
   let videoInputContainer;
-  //let previousNotesContainer;
-  //let showPreviousNotes;
-  //let hidePreviousNotes;
+  let previousNotesContainer;
+  let showPreviousNotes;
+  let hidePreviousNotes;
+  let closePagesNotes;
+  let openPagesNotes;
 
   const videoPlayersLocation = [];
   const coords = [0, 0];
 
   addNoteBtnCont = document.getElementById('addNoteBtnContainer');
-  addNoteBtn = document.getElementById('addNoteBtn');
+  addNoteBtn = document.querySelectorAll('#addNoteBtn')[1];
   noteTypeBtns = document.getElementById('noteTypes');
   noteTypeBtnList = document.getElementsByClassName('noteTypeBtn');
   videoRangeInputs = document.getElementsByClassName('range-input');
   textInputContainer = document.getElementById('textInputContainer');
   videoInputContainer = document.getElementById('videoInputContainer');
+  closePagesNotes = document.querySelectorAll('#closePagesNotes')[1]; 
+  openPagesNotes = document.querySelectorAll('#normalPagesNotes')[1];
 
   // window events
   window.addEventListener('mousemove', e => {
@@ -216,7 +274,6 @@ const main = () => {
       Array.from(videoPlayersLocation).forEach((video, i) => {
         if (e.clientX > video.x.start && e.clientX < video.x.end
           && e.clientY > video.y.start && e.clientY < video.y.end) {
-          console.log('pass?');
           overVideo = videoPlayers[i];
           nothingFound = false;
         }
@@ -268,7 +325,6 @@ const main = () => {
     if (!keys.includes(e.key)) {
       keys.push(e.key);
       if (keys.includes('W') && keys.includes('Shift')) {
-        console.log('AHH', addNoteBtnCont);
         if (addNoteBtnCont) {
           videoRangeContainer.classList.add('video-range--hidden');
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
@@ -344,27 +400,34 @@ const main = () => {
   window.onblur = clearKeys;
   // End get key commands to show button
 
-  //const damnyou = document.querySelectorAll('#previouslyAddedNotes')[0];
-  //previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
-  //showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
-  //hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
+  previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
 
-  //showPreviousNotes.addEventListener('click', e => {
-  //  document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+  showPreviousNotes && showPreviousNotes.addEventListener('click', e => {
+    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
-  //  previousNotesContainer.classList.remove('notes-notice--hide');
-  //  previousNotesContainer.classList.contains('hidden');
-  //});
+    previousNotesContainer.classList.remove('notes-notice--hide');
+    previousNotesContainer.classList.contains('hidden');
+  });
 
-  //hidePreviousNotes.addEventListener('click', e => {
-  //  document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+  closePagesNotes && closePagesNotes.addEventListener('click', e => {
+    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+    //previousNotesContainer.classList.add('hidden');
+    previousNotesContainer.classList.add('notes-notice--small');
+    previousNotesContainer.classList.add('notes-notice--hide');
+  });
 
-  //  if (previousNotesContainer.classList.contains('notes-notice--hide')) {
-  //    previousNotesContainer.classList.add('hidden');
-  //  } else {
-  //    previousNotesContainer.classList.add('notes-notice--hide');
-  //  }
-  //});
+  openPagesNotes && openPagesNotes.addEventListener('click', e => {
+    console.log('Open');
+    previousNotesContainer.classList.remove('notes-notice--small');
+  });
+
+  hidePreviousNotes.addEventListener('click', e => {
+    document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
+
+      previousNotesContainer.classList.add('notes-notice--hide');
+  });
 
   addNoteBtn && addNoteBtn.addEventListener('click', e => {
     if (noteTypeBtns) {
