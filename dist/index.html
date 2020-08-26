@@ -11,15 +11,16 @@
       <div class="form-box">
         <div class="button-box">
           <div id="btn"></div>
-          <button type="button" class="toggle-btn" id="login-btn">
+          <button type="button" class="toggle-btn" id="loginBtn">
             Log In
           </button>
-          <button type="button" class="toggle-btn" id="register-btn">
+          <button type="button" class="toggle-btn" id="registerBtn">
             Register
           </button>
         </div>
+        <div class="errorsDiv"></div>
         <div class="input-group login" id="login">
-          <input type="text" class="input-field" placeholder="Username" required />
+          <input id="userNameLogin" type="text" class="input-field" placeholder="Username" required />
           <input
             type="password"
             class="input-field"
@@ -34,8 +35,8 @@
           </div>
           <button type="submit" class="submit-btn">Log In</button>
         </form>
-        <form class="input-group register" id="register">
-          <input type="text" class="input-field" placeholder="Username" required />
+        <form class="input-group register" id="registerForm">
+          <input id="userNameRegister" type="text" class="input-field" placeholder="Username" required />
           <input
             type="password"
             class="input-field"
@@ -53,8 +54,10 @@
       </div>
     </div>
     <div id="authenticated" class="hidden authenticated">
-      <h1>Yoooo!</h1>
-      <p>We are in fam</p>
+      <div class="dashboard">
+        <btn id="addNoteBtn" type="button">Add Note</btn>
+        <btn type="button">Blaa Note</btn>
+      </div>
     </div>
     <script src="./main.js"></script>
   </body>
