@@ -1,5 +1,6 @@
 import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
+import { addBasicNote, addMediaNote } from './services/apiRequests';
 
 const handleScreenshot = (overVideo, overElement) => {
   // Add a canva elemenst to the body
@@ -21,9 +22,18 @@ const handleScreenshot = (overVideo, overElement) => {
     overVideo.style.backgroundSize = 'cover';
 
     // get image blob to stores
-    canvas.toBlob(function (blob) {
-      saveAs(blob, `${document.title}.png`);
-    });
+    canvas.toBlob(async function (blob) {
+      const timeStamp = JSON.stringify([overVideo.currentTime, overVideo.currentTime]);
+      const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, canvas.toDataURL(), timeStamp).catch(err => {
+        console.log(err);
+      })
+
+      if (sentMedia && sentMedia.status === 200) {
+        console.log('Media sent successfully')
+      } else {
+        console.log(sentMedia);
+      }
+    }, { type: 'image/png' });
     return;
 
   } else {
@@ -35,18 +45,32 @@ const handleScreenshot = (overVideo, overElement) => {
       canvas.style.width = `${100}%`;
       document.body.appendChild(canvas);
 
-      document.getElementById(id).toBlob(function (blob) {
-        saveAs(blob, `${overElement.ownerDocument.title}.png`);
+      document.getElementById(id).toBlob(async function (blob) {
+        const sentMedia = addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null)
+        //saveAs(blob, `${overElement.ownerDocument.title}.png`);
+        if (sentMedia && sentMedia.status === 200) {
+          console.log('Media sent successfully')
+        } else {
+          console.log(sentMedia)
+        }
       });
     });
   }
 };
 
 const handleText = (video, input) => {
-  input.querySelector('#textInputBtn').onclick = () => {
+  input.querySelector('#textInputBtn').onclick = async () => {
     const textContent = input.querySelector('#textInput').value;
 
     console.log('Video time stamps: ', video && video[0].value, video && video[1].value, textContent);
+
+    const sentData = await addBasicNote(window.location.href, textContent, localStorage.getItem('userToken'));
+
+    if (sentData.status === 200) {
+      console.log('Note saved successfully! ', sentData);
+    } else {
+      console.log(sentMedia)
+    }
 
     input.querySelector('#textInput').value = '';
 
@@ -84,16 +108,26 @@ const handleVideo = (video, input) => {
       stopButton.addEventListener('click', e => {
         e.preventDefault();
 
-        player.stop();
+        //player.stop();
         mediaRecorder.stop();
       });
 
-      mediaRecorder.onstop = function (e) {
-        console.log("data available after MediaRecorder.stop() called.");
+      mediaRecorder.onstop = async function (e) {
+        console.log("data available after MediaRecorder called.");
 
         // does not work on windows media player, working on browser!
-        downloadLink.href = URL.createObjectURL(new Blob(chunks, { 'type': 'video/webm; codecs=opus' }));
-        downloadLink.download = 'acetest.webm';
+        //downloadLink.href = 
+        const blob = new Blob(chunks, { 'type': 'video/webm; codecs=opus' });
+        const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null).catch(err => {
+          console.log(err.response);
+        })
+  
+        if (sentMedia && sentMedia.status === 200) {
+          console.log('Media sent successfully')
+        } else {
+          console.log(sentMedia);
+        }
+        //downloadLink.download = 'acetest.webm';
       };
 
       mediaRecorder.ondataavailable = function (e) {

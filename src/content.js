@@ -31,13 +31,20 @@ const noteFactory = (note) => {
 let userIsAuthenticated = false;
 
 chrome.storage.sync.get(['userToken'], function (result) {
-  if (result.userToken === 'hell yes') {
+  if (result.userToken) {
     userIsAuthenticated = true;
     main();
     chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
-      console.log('Answer: ', response.token);
+      console.log('Answer: ', response && response.token);
     });
   } else {
+    if (localStorage.getItem('userToken')) {
+      chrome.storage.sync.set({ userToken:localStorage.getItem('userToken'), limit: Date.now() + 86400000 }, function () {
+        console.log('User token set as ' +localStorage.getItem('userToken'));
+        localStorage && localStorage.setItem('userToken',localStorage.getItem('userToken'));
+      })
+      userIsAuthenticated = true;
+    }
     console.log('User is not authenticated');
   }
 });
@@ -54,21 +61,20 @@ chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     console.log(sender.tab ?
       "from a content script:" + sender.tab.url :
-      "from the extension, token: ", request.token);
+      "from the extension, token: ", request && request.token);
     if (request && request.token == "hello") {
       sendResponse({ farewell: "goodbye" });
       chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
         console.log('Answer: ', response && response.token);
-        chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000 }, function () {
-          console.log('User token set as ' + 'hell yes');
+        chrome.storage.sync.set({ userToken: request.userToken, limit: Date.now() + 86400000 }, function () {
+          console.log('User token set as ' + request.userToken);
+          localStorage && localStorage.setItem('userToken', request.userToken);
         })
       });
       userIsAuthenticated = true;
       main();
     } else if (request && request.token == "check") {
-      console.log('checking')
       chrome.storage.sync.get(['userToken', 'limit'], function (result) {
-        console.log(result.limit, typeof result.limit)
         if (result.limit < Date.now()) {
           console.log('Expired token');
           chrome.storage.sync.remove(['userToken', 'limit'], () => {
@@ -79,12 +85,11 @@ chrome.runtime.onMessage.addListener(
           });
         }
 
-        if (result.userToken && result.userToken === 'hell yes') {
+        if (result.userToken && result.limit > Date.now()) {
           userIsAuthenticated = true;
           main();
-          console.log('Still logged in');
-          chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
-            console.log('Answer: ', response && response.token);
+          chrome.runtime.sendMessage({ loggedIn: "yeresponses" }, function (response) {
+            console.log('Answer: ', response && response.userToken);
           });
         } else {
           console.log('User is not loggedin');
@@ -210,26 +215,29 @@ const main = () => {
   div.appendChild(addNoteBtnContainer);
   document.body.appendChild(div);
 
-
+/*
   Array.from(videoNoteItems.children).forEach(videoNote => {
     // time in seconds
     const videoDimensions = videoNote.getBoundingClientRect();
     const fullSize = pageVideo.duration;
     const timeStamps = [videoNote.dataset.start, videoNote.dataset.end];
-    const startPercentage = Number.parseFloat(videoNote.dataset.start) / fullSize;
-
+    const startPercentage = Number.parseInt(videoNote.dataset.start, 10) / fullSize;
+    console.log(videoDimensions);
+    console.log(fullSize, pageVideo);
+    console.log(videoNote.dataset.start)
     videoNote.style.position = 'absolute';
     videoNote.style.left = `${(startPercentage * videoDimensions.width) + videoDimensions.x <= (videoDimensions.width - 100) ? (startPercentage * videoDimensions.width) + videoDimensions.x  : (videoDimensions.width - 100)}px`;
     videoNote.style.top = `${videoDimensions.height + videoDimensions.y}px`;
-    videoNote.stye.display = 'block !important';
+    videoNote.style.display = 'block !important';
     videoNote.style.backgroundImage = 'linear-gradient(to top, #ff105f99, #ffad0699)';
     videoNote.style.padding = '3px 5px';
     videoNote.style.width = '100px';
+    videoNote.style.height = '33px';
     videoNote.style.overflow = 'hidden';
     videoNote.style.textOverflow = 'ellipsis';
     console.log(`At ${startPercentage}% of the video of ${fullSize}`);
   });
-
+*/
   // always use appendChild and not innerHTML directly in existing page elements, 
   // otherwise it can make the page stop working
 
@@ -423,13 +431,14 @@ const main = () => {
     previousNotesContainer.classList.remove('notes-notice--small');
   });
 
-  hidePreviousNotes.addEventListener('click', e => {
+  hidePreviousNotes && hidePreviousNotes.addEventListener('click', e => {
     document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
       previousNotesContainer.classList.add('notes-notice--hide');
   });
 
-  addNoteBtn && addNoteBtn.addEventListener('click', e => {
+  document.getElementById('addNoteBtn').addEventListener('click', e => {
+    console.log('WUH')
     if (noteTypeBtns) {
       document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
       noteTypeBtns.classList.remove('row--hidden');

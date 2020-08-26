@@ -50,6 +50,21 @@ body {
   transition: 0.5s;
 }
 
+.authenticated {
+  background: linear-gradient(to right, #ff105f, #ffad06);
+}
+
+.controll-pannel {
+  align-items: flex-start;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  border: 20px;
+  width: calc(100% - 40px);
+  background-color: #fff;
+}
+
 .input-group {
   top: 120px;
   position: absolute;
@@ -83,6 +98,10 @@ body {
   margin: 30px 10px 30px 0;
 }
 
+.errorsDiv {
+  color: red;
+}
+
 span {
   color: #777;
   font-size: 12px;
@@ -110,4 +129,26 @@ span {
 
 .hidden {
   display: none;
+}
+
+.controll-pannel {
+  padding: 20px;
+}
+
+.controll-pannel ul {
+  padding-left: 0;
+  margin-left: 0;
+  list-style: none;
+}
+
+.controll-pannel li {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  align-items: center;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.controll-pannel li label {
+  margin-left: 20px;
 }
