@@ -6,7 +6,7 @@ window.onload = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       // Send token from API here
       chrome.tabs.sendMessage(tabs[0].id, { token: "check" }, function (response) {
-        if (response && response.farewell === 'goodbye') {
+        if (response && response.farewell) {
           nonAuthenticatedContent.classList.add('hidden');
           authenticatedContent.classList.remove('hidden');
         };

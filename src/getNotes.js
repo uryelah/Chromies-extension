@@ -62,7 +62,7 @@ const currentPageNotes = () => ([
     id: 3,
     pageLink: "",
     body: "",
-    videoLink: "http://v20.lscache8.c.youtube.com/videoplayback?sparams=id%2Cexpire%2Cip%2Cipbits%2Citag%2Cratebypass%2Coc%3AU0hPRVRMVV9FSkNOOV9MRllD&amp;itag=43&amp;ipbits=0&amp;signature=D2BCBE2F115E68C5FF97673F1D797F3C3E3BFB99.59252109C7D2B995A8D51A461FF9A6264879948E&amp;sver=3&amp;ratebypass=yes&amp;expire=1300417200&amp;key=yt1&amp;ip=0.0.0.0&amp;id=37da319914f6616c",
+    videoLink: "https://dafftube.org/wp-content/uploads/2014/01/Sample_1280x720_mp4.mp4",
     imgLink: "",
     userID: "", 
     createdAt: Date.now(),

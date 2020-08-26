@@ -17,7 +17,7 @@ const noteFactory = (note) => {
     ${
       note.videoLink && (`
       <video width="320" height="240" controls>
-        <source src="${note.videoLink}" type="video/webm"/>
+        <source src="${note.videoLink}" type="video/mp4"/>
       </video>`)
     }
     ${
@@ -29,11 +29,12 @@ const noteFactory = (note) => {
 `)};
 
 let userIsAuthenticated = false;
+let previousNotesContainer;
 
 chrome.storage.sync.get(['userToken'], function (result) {
   if (result.userToken) {
     userIsAuthenticated = true;
-    main();
+    //main();
     chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
       console.log('Answer: ', response && response.token);
     });
@@ -41,7 +42,12 @@ chrome.storage.sync.get(['userToken'], function (result) {
     if (localStorage.getItem('userToken')) {
       chrome.storage.sync.set({ userToken:localStorage.getItem('userToken'), limit: Date.now() + 86400000 }, function () {
         console.log('User token set as ' +localStorage.getItem('userToken'));
-        localStorage && localStorage.setItem('userToken',localStorage.getItem('userToken'));
+        if (localStorage) {
+          localStorage.setItem('userToken',localStorage.getItem('userToken'));
+        } 
+        if (previousNotesContainer) {
+          previousNotesContainer.style.display = 'block';
+        }
       })
       userIsAuthenticated = true;
     }
@@ -52,7 +58,7 @@ chrome.storage.sync.get(['userToken'], function (result) {
 window.onload = () => {
 
   if (userIsAuthenticated) {
-    main();
+    //main();
   }
 }
 
@@ -63,12 +69,15 @@ chrome.runtime.onMessage.addListener(
       "from a content script:" + sender.tab.url :
       "from the extension, token: ", request && request.token);
     if (request && request.token == "hello") {
-      sendResponse({ farewell: "goodbye" });
+      sendResponse({ farewell: localStorage.getItem('userToken') });
       chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
         console.log('Answer: ', response && response.token);
         chrome.storage.sync.set({ userToken: request.userToken, limit: Date.now() + 86400000 }, function () {
           console.log('User token set as ' + request.userToken);
           localStorage && localStorage.setItem('userToken', request.userToken);
+          if (previousNotesContainer) {
+            previousNotesContainer.style.display = 'block';
+          } 
         })
       });
       userIsAuthenticated = true;
@@ -148,13 +157,13 @@ const main = () => {
 
   noteTypeRow.innerHTML = `
 <button type="button" data-type="text" class="buttao-default noteTypeBtn">
-  Plain/Text
+✏️ Plain/Text
 </button>
 <button type="button" data-type="image" class="buttao-default noteTypeBtn">
-  Screenshot
+📷 Screenshot
 </button>
 <button type="button" data-type="video" class="buttao-default noteTypeBtn">
-  Video
+🎥 Video
 </button>
 `;
 
@@ -164,7 +173,7 @@ const main = () => {
 `;
 
   textInputContainerElement.innerHTML = `
-  <textarea maxlength="50" class="text-input" id="textInput"></textarea> 
+  <textarea maxlength="500" class="text-input" id="textInput"></textarea> 
   <button type="button" class="buttao-default text-input-btn" id="textInputBtn">
     Add
   </button>
@@ -172,16 +181,16 @@ const main = () => {
 
   videoInputElement.innerHTML = `
   <video id="player" class="video-player" controls></video>
-  <button id="stop">Stop</button>
+  <button class="buttao-default" id="stop">Stop</button>
   <a id="download" class="btn buttao-default">Download</a>
   `;
 
   pagesNotes.innerHTML = (`
   <button type="button" class="close-ico" id="closePagesNotes">❌</button>
-  <button type="button" class="open-ico" id="normalPagesNotes">Notes</button>
+  <button type="button" class="open-ico" id="normalPagesNotes">💡</button>
   <p>This page has notes...</p>
-  <button class="btn buttao-default" id="showPreviousNotes">Show notes</button>
-  <button class="btn buttao-default" id="hidePreviousNotes" type="button">Hide notes</button>
+  <button class="btn buttao-default" id="showPreviousNotes">💡  Show notes</button>
+  <button class="btn buttao-default buttao-secondario" id="hidePreviousNotes" type="button">Hide notes</button>
   `);
 
   const noteList = currentPageNotes();
@@ -215,7 +224,7 @@ const main = () => {
   div.appendChild(addNoteBtnContainer);
   document.body.appendChild(div);
 
-/*
+
   Array.from(videoNoteItems.children).forEach(videoNote => {
     // time in seconds
     const videoDimensions = videoNote.getBoundingClientRect();
@@ -237,7 +246,7 @@ const main = () => {
     videoNote.style.textOverflow = 'ellipsis';
     console.log(`At ${startPercentage}% of the video of ${fullSize}`);
   });
-*/
+
   // always use appendChild and not innerHTML directly in existing page elements, 
   // otherwise it can make the page stop working
 
@@ -252,7 +261,6 @@ const main = () => {
   let videoRangeInputs;
   let textInputContainer;
   let videoInputContainer;
-  let previousNotesContainer;
   let showPreviousNotes;
   let hidePreviousNotes;
   let closePagesNotes;
@@ -315,11 +323,11 @@ const main = () => {
         videoInputContainer.classList.add('input-video--hidden');
 
         if (type === 'image') {
-          handleScreenshot(overVideo, overElement);
+          handleScreenshot(overVideo, overElement, coords);
         } else if (type === 'text') {
           document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
           textInputContainer.classList.remove('input-text--hidden');
-          handleText(overVideo ? videoRangeInputs : false, textInputContainer);
+          handleText(overVideo ? videoRangeInputs : false, textInputContainer, coords);
         } else if (type === 'video') {
           document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
           videoInputContainer.classList.remove('input-video--hidden');
@@ -329,12 +337,17 @@ const main = () => {
     });
   }
 
+  addNoteBtn.addEventListener('click', e => {
+    textInputContainer.classList.add('input-text--hidden');W
+    document.querySelectorAll('#videoInputContainer')[1].classList.add('input-video--hidden');
+    document.querySelectorAll('#videoInputContainer')[0].classList.add('input-video--hidden');
+  });
+
   window.onkeydown = async function (e) {
     if (!keys.includes(e.key)) {
       keys.push(e.key);
       if (keys.includes('W') && keys.includes('Shift')) {
         if (addNoteBtnCont) {
-          videoRangeContainer.classList.add('video-range--hidden');
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
 
           noteTypeEvents(overVideo, overElement);
@@ -344,6 +357,7 @@ const main = () => {
             console.log(`Video at ${overVideo.currentTime} and with total duration of ${overVideo.duration}`);
             console.log(`Video currently ${overVideo.paused ? 'paused' : 'playing'}`);
 
+            document.getElementById('rangeControllGroup').classList.remove('video-range--hidden')
             videoRangeContainer.classList.remove('video-range--hidden');
             const youtubeProgressBar = document.getElementsByClassName('ytp-progress-bar')[0];
 
@@ -409,10 +423,13 @@ const main = () => {
   // End get key commands to show button
 
   previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
+  document.querySelectorAll('#previouslyAddedNotes')[0].display = 'none';
   showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  document.querySelectorAll('#showPreviousNotes')[0].style.display = 'none';
   hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
 
-  showPreviousNotes && showPreviousNotes.addEventListener('click', e => {
+
+  showPreviousNotes.addEventListener('click', e => {
     document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
     previousNotesContainer.classList.remove('notes-notice--hide');
