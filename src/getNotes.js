@@ -21,11 +21,11 @@ const currentPageNotes = () => ([
   {
     id: 0,
     pageLink: "",
-    body: "People want to go on religious pilgrimages to spiritual places in the springtime, when the April rains have soaked deep into the dry ground to water the flowers’ roots; and when Zephyrus, the god of the west wind, has helped new flowers to grow everywhere; and when you can see the constellation Aries in the sky; and when the birds sing all the time. ",
+    body: "Remember to pay the internet bill!!! ",
     videoLink: "",
     imgLink: "",
     userID: "", 
-    createdAt: Date.now(),
+    createdAt: Date.now() - 800000,
     videoTimeStamp: "",
   },
   {
@@ -47,6 +47,16 @@ const currentPageNotes = () => ([
     userID: "", 
     createdAt: Date.now(),
     videoTimeStamp: "[806, 194]",
+  },
+  {
+    id: 4,
+    pageLink: "",
+    body: "",
+    videoLink: "https://cdn.loom.com/sessions/raw/b03b93514c8e4397aa748e64b638f621.webm?Expires=1598529625&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4ubG9vbS5jb20vc2Vzc2lvbnMvcmF3L2IwM2I5MzUxNGM4ZTQzOTdhYTc0OGU2NGI2MzhmNjIxLndlYm0iLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE1OTg1Mjk2MjV9fX1dfQ__&Signature=Wfe1a8N76oiv-Tl~wNghrGk4QSjRmgBK3wEUo980lvD6ACLnbJw9QmBe1fzBqeDrKVVdRD0tQELw1bzPj3D7d0VZJH3tcomLwyofAklLPgBtup54aVcMYeRF5siS-XAZfew8lx8Lxqt6e2Wo5~y84z2h92S-ogaMjv813l9AuVpVgQT95IpcyoUZlvQNyDGEs5TtQkGvrIJDf3g0-PEBnVSTcD8U1vMiv-SqJd4fKSKAmuOx4PSBAjJLyu94oP4OSVUoDwitWbusvYXDQ5jTbkazFRVME1PVxlwI9hlMQgvtjUScVgnuJy2g4l65h-55lCEIgirElgIBTQC-m8YPtg__&Key-Pair-Id=APKAJQIC5BGSW7XXK7FQ",
+    imgLink: "",
+    userID: "", 
+    createdAt: Date.now(),
+    videoTimeStamp: "",
   },
   {
     id: 2,

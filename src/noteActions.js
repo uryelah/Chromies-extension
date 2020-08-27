@@ -23,17 +23,7 @@ const handleScreenshot = (overVideo, overElement, coords) => {
 
     // get image blob to stores
     canvas.toBlob(async function (blob) {
-      //const timeStamp = JSON.stringify([overVideo.currentTime, overVideo.currentTime]);
-      //const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, timeStamp).catch(err => {
-      //  console.log(err);
-      //})
-
-      //if (sentMedia && sentMedia.status === 200) {
-      //  console.log('Media sent successfully')
-      //} else {
-      //  console.log(sentMedia);
-      //}
-      const thumbnail = document.createElement('img');
+       const thumbnail = document.createElement('img');
       thumbnail.classList = 'thumbnail';
       thumbnail.setAttribute('width','256px');
       thumbnail.setAttribute('height','164px');
@@ -75,13 +65,7 @@ const handleScreenshot = (overVideo, overElement, coords) => {
         setTimeout(() => {
           thumbnail.remove();
         }, 2000);
-        //const sentMedia = addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null)
-        //saveAs(blob, `${overElement.ownerDocument.title}.png`);
-        //if (sentMedia && sentMedia.status === 200) {
-        //  console.log('Media sent successfully')
-        //} else {
-        //  console.log(sentMedia)
-        //}
+
       });
     });
   }
@@ -110,13 +94,6 @@ const handleText = (video, input, coords) => {
         thumbnail.remove();
       }, 2000);
     }
-    //const sentData = await addBasicNote(window.location.href, textContent, localStorage.getItem('userToken'));
-
-    //if (sentData.status === 200) {
-    //  console.log('Note saved successfully! ', sentData);
-    //} else {
-    //  console.log(sentMedia)
-    //}
 
     input.querySelector('#textInput').value = '';
 
@@ -158,15 +135,8 @@ const handleVideo = (video, input) => {
 
         // does not work on windows media player, working on browser!
         downloadLink.href = URL.createObjectURL(new Blob(chunks, { 'type': 'video/webm; codecs=opus' }));
-        //const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null).catch(err => {
-        //  console.log(err.response);
-        //})
-  
-        //if (sentMedia && sentMedia.status === 200) {
-        //  console.log('Media sent successfully')
-        //} else {
-        //  console.log(sentMedia);
-        //}
+        const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null).catch(err => {
+
         downloadLink.download = 'acetest.webm';
       };
 

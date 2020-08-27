@@ -41,8 +41,10 @@ window.onload = () => {
       btn.addEventListener('click', async e => {
         //login
         if (btn.dataset.type === 'login') {
+          // set loading
           const result = await loginUser(inputLoginUsername.value);
           if (result.status === 200) {
+            // unset loading
             errorsDiv.textContent = '';
             // eslint-disable-next-line no-underscore-dangle
             chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {

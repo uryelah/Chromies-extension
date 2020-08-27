@@ -16,9 +16,8 @@ const noteFactory = (note) => {
     }
     ${
       note.videoLink && (`
-      <video width="320" height="240" controls>
-        <source src="${note.videoLink}" type="video/mp4"/>
-      </video>`)
+      <video controls width="200px" class="video-player-video" controlslist="nodownload" playsinline="" preload="auto" tabindex="-1" src="https://cdn.loom.com/sessions/raw/9e01b7dd86034d0da7064551ee210c9b.webm?Expires=1598531357&amp;Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4ubG9vbS5jb20vc2Vzc2lvbnMvcmF3LzllMDFiN2RkODYwMzRkMGRhNzA2NDU1MWVlMjEwYzliLndlYm0iLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE1OTg1MzEzNTd9fX1dfQ__&amp;Signature=NiQVAAJkCFWMoxjeR14jCBSapd6sdEFKmOr9bw6Rm419PRelJGXoiukQDmnU0rEPkts6Sa3htX26Kpl7~~zA6pV7wPDNdjgQ1ULIaGqD93nkpt5y~z~jVdJEcyB0LMWqKpUmEONaQsjmhr~V2EyzEZPGmR~Iv~DDk00hIc0X3cl0Zby8z3lXR6t0QxrG-mF6NOQWOz4fxc7mqnu~0Jp~JyLbt~Ymi0nUG0QxacnMGyxlrSj5BKRpHhpZuQ6M9q8GqaU70Gf8glBIlNcr~Tel2xEFXlv4~21fUXmXgd0OfeKbRcP7xotkTBYzvCyMBOMuUiKzjrMISnVjsUIIQ4S0jQ__&amp;Key-Pair-Id=APKAJQIC5BGSW7XXK7FQ"></video>
+      `)
     }
     ${
       note.videoTimeStamp && (`
@@ -227,16 +226,18 @@ const main = () => {
 
   Array.from(videoNoteItems.children).forEach(videoNote => {
     // time in seconds
+    if (window.location.host !== 'www.youtube.com') { return }
+
     const videoDimensions = videoNote.getBoundingClientRect();
     const fullSize = pageVideo.duration;
     const timeStamps = [videoNote.dataset.start, videoNote.dataset.end];
-    const startPercentage = Number.parseInt(videoNote.dataset.start, 10) / fullSize;
+    const startPercentage = Number.parseInt(180, 10) / fullSize;
     console.log(videoDimensions);
     console.log(fullSize, pageVideo);
     console.log(videoNote.dataset.start)
     videoNote.style.position = 'absolute';
     videoNote.style.left = `${(startPercentage * videoDimensions.width) + videoDimensions.x <= (videoDimensions.width - 100) ? (startPercentage * videoDimensions.width) + videoDimensions.x  : (videoDimensions.width - 100)}px`;
-    videoNote.style.top = `${videoDimensions.height + videoDimensions.y}px`;
+    videoNote.style.top = `${380}px`;
     videoNote.style.display = 'block !important';
     videoNote.style.backgroundImage = 'linear-gradient(to top, #ff105f99, #ffad0699)';
     videoNote.style.padding = '3px 5px';
@@ -424,7 +425,9 @@ const main = () => {
 
   previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
   document.querySelectorAll('#previouslyAddedNotes')[0].display = 'none';
-  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[showPreviousNotes.length - 1]
+
   document.querySelectorAll('#showPreviousNotes')[0].style.display = 'none';
   hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
 
