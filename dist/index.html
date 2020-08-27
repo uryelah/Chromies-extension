@@ -8,6 +8,9 @@
   </head>
   <body>
     <div id="auth-form" class="hero">
+      <div>
+        <em class="errorsDiv"></em>
+      </div>
       <div class="form-box">
         <div class="button-box">
           <div id="btn"></div>
@@ -19,7 +22,7 @@
           </button>
         </div>
         <div class="input-group login" id="login">
-          <input type="text" class="input-field" placeholder="Username" required />
+          <input type="text" id="input-field" class="input-field" placeholder="Username" required />
           <input
             type="password"
             class="input-field"
@@ -32,10 +35,10 @@
             </div>
             <p>Remember Password</p>
           </div>
-          <button type="submit" class="submit-btn">Log In</button>
+          <button type="submit" data-type="login" class="submit-btn">Log In</button>
         </form>
         <form class="input-group register" id="register">
-          <input type="text" class="input-field" placeholder="Username" required />
+          <input type="text" id="signup-field" class="input-field" placeholder="Username" required />
           <input
             type="password"
             class="input-field"
@@ -48,13 +51,32 @@
             </div>
             <p>I agree to the terms and conditions</p>
           </div>
-          <button type="button" class="submit-btn">Register</button>
+          <button type="button" data-type="signup" class="submit-btn">Register</button>
         </div>
       </div>
     </div>
     <div id="authenticated" class="hidden authenticated">
-      <h1>Yoooo!</h1>
-      <p>We are in fam</p>
+      <div class="controll-pannel">
+        <h1>Options</h1>
+        <ul>
+          <li>
+            <input type="checkbox" id="showNotes"/>
+            <label>💡 Show notes</label>
+          </li>
+          <li>
+            <input type="checkbox" id="showCommunityNotes"/>
+            <label>Show community notes</label>
+          </li>
+          <li>
+            <input type="checkbox" id="showRealTimeNotes"/>
+            <label>Show real time notes</label>
+          </li>
+          <li>
+            <input type="checkbox" id="showLocationNotes"/>
+            <label>Show location notes</label>
+          </li>
+        </ul>
+      </div>
     </div>
     <script src="./main.js"></script>
   </body>

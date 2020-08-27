@@ -1,7 +1,8 @@
 import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
+import { addBasicNote, addMediaNote } from './services/apiRequests';
 
-const handleScreenshot = (overVideo, overElement) => {
+const handleScreenshot = (overVideo, overElement, coords) => {
   // Add a canva elemenst to the body
   if (overVideo) {
     let canvas = document.getElementsByTagName('canvas')[1];
@@ -21,9 +22,22 @@ const handleScreenshot = (overVideo, overElement) => {
     overVideo.style.backgroundSize = 'cover';
 
     // get image blob to stores
-    canvas.toBlob(function (blob) {
-      saveAs(blob, `${document.title}.png`);
-    });
+    canvas.toBlob(async function (blob) {
+       const thumbnail = document.createElement('img');
+      thumbnail.classList = 'thumbnail';
+      thumbnail.setAttribute('width','256px');
+      thumbnail.setAttribute('height','164px');
+      thumbnail.style.position = 'absolute';
+      thumbnail.style.left = `${coords[0]}px`;
+      thumbnail.style.top = `${coords[1]}px`;
+      thumbnail.style.zIndex = 100000;
+      thumbnail.src = canvas.toDataURL('image/jpg');
+
+      document.body.appendChild(thumbnail);
+      setTimeout(() => {
+        thumbnail.remove();
+      }, 2000);
+    }, { type: 'image/png' });
     return;
 
   } else {
@@ -35,18 +49,51 @@ const handleScreenshot = (overVideo, overElement) => {
       canvas.style.width = `${100}%`;
       document.body.appendChild(canvas);
 
-      document.getElementById(id).toBlob(function (blob) {
-        saveAs(blob, `${overElement.ownerDocument.title}.png`);
+      document.getElementById(id).toBlob(async function (blob) {
+        const thumbnail = document.createElement('img');
+        thumbnail.classList = 'thumbnail';
+        thumbnail.setAttribute('width','256px');
+        thumbnail.setAttribute('height','164px');
+        thumbnail.style.position = 'absolute';
+        thumbnail.style.left = `${coords[0]}px`;
+        thumbnail.style.top = `${coords[1]}px`;
+        thumbnail.style.zIndex = 100000;
+        thumbnail.src = canvas.toDataURL('image/jpg');
+
+        document.body.appendChild(thumbnail);
+
+        setTimeout(() => {
+          thumbnail.remove();
+        }, 2000);
+
       });
     });
   }
 };
 
-const handleText = (video, input) => {
-  input.querySelector('#textInputBtn').onclick = () => {
+const handleText = (video, input, coords) => {
+  input.querySelector('#textInputBtn').onclick = async () => {
     const textContent = input.querySelector('#textInput').value;
 
     console.log('Video time stamps: ', video && video[0].value, video && video[1].value, textContent);
+
+    if (!video || !video[0].value) {
+      const thumbnail = document.createElement('p');
+      thumbnail.innerText = textContent;
+      thumbnail.classList = 'thumbnail';
+      thumbnail.setAttribute('width','256px');
+      thumbnail.setAttribute('height','154px');
+      thumbnail.style.position = 'absolute';
+      thumbnail.style.left = `${coords[0]}px`;
+      thumbnail.style.top = `${coords[1]}px`;
+      thumbnail.style.zIndex = 100000;
+  
+      document.body.appendChild(thumbnail);
+  
+      setTimeout(() => {
+        thumbnail.remove();
+      }, 2000);
+    }
 
     input.querySelector('#textInput').value = '';
 
@@ -63,11 +110,7 @@ const handleVideo = (video, input) => {
   let stopped = false;
   const downloadLink = document.getElementById('download');
   const stopButton = document.getElementById('stop');
-  const player = document.getElementById('player');
-
-  const handleSuccess = (stream) => {
-
-  };
+  const player = document.querySelectorAll('#player')[0];
 
   navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     .then((stream) => {
@@ -79,20 +122,21 @@ const handleVideo = (video, input) => {
       const mediaRecorder = new MediaRecorder(stream, options);
       var chunks = [];
       mediaRecorder.start();
-      console.log(mediaRecorder)
 
       stopButton.addEventListener('click', e => {
         e.preventDefault();
 
-        player.stop();
+        document.querySelectorAll('#player')[0].pause();
         mediaRecorder.stop();
       });
 
-      mediaRecorder.onstop = function (e) {
-        console.log("data available after MediaRecorder.stop() called.");
+      mediaRecorder.onstop = async function (e) {
+        console.log("data available after MediaRecorder called.");
 
         // does not work on windows media player, working on browser!
         downloadLink.href = URL.createObjectURL(new Blob(chunks, { 'type': 'video/webm; codecs=opus' }));
+        const sentMedia = await addMediaNote(window.location.href, localStorage.getItem('userToken'), null, blob, null).catch(err => {
+
         downloadLink.download = 'acetest.webm';
       };
 

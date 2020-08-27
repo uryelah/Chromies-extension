@@ -16,9 +16,8 @@ const noteFactory = (note) => {
     }
     ${
       note.videoLink && (`
-      <video width="320" height="240" controls>
-        <source src="${note.videoLink}" type="video/webm"/>
-      </video>`)
+      <video controls width="200px" class="video-player-video" controlslist="nodownload" playsinline="" preload="auto" tabindex="-1" src="https://cdn.loom.com/sessions/raw/9e01b7dd86034d0da7064551ee210c9b.webm?Expires=1598531357&amp;Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4ubG9vbS5jb20vc2Vzc2lvbnMvcmF3LzllMDFiN2RkODYwMzRkMGRhNzA2NDU1MWVlMjEwYzliLndlYm0iLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE1OTg1MzEzNTd9fX1dfQ__&amp;Signature=NiQVAAJkCFWMoxjeR14jCBSapd6sdEFKmOr9bw6Rm419PRelJGXoiukQDmnU0rEPkts6Sa3htX26Kpl7~~zA6pV7wPDNdjgQ1ULIaGqD93nkpt5y~z~jVdJEcyB0LMWqKpUmEONaQsjmhr~V2EyzEZPGmR~Iv~DDk00hIc0X3cl0Zby8z3lXR6t0QxrG-mF6NOQWOz4fxc7mqnu~0Jp~JyLbt~Ymi0nUG0QxacnMGyxlrSj5BKRpHhpZuQ6M9q8GqaU70Gf8glBIlNcr~Tel2xEFXlv4~21fUXmXgd0OfeKbRcP7xotkTBYzvCyMBOMuUiKzjrMISnVjsUIIQ4S0jQ__&amp;Key-Pair-Id=APKAJQIC5BGSW7XXK7FQ"></video>
+      `)
     }
     ${
       note.videoTimeStamp && (`
@@ -29,15 +28,28 @@ const noteFactory = (note) => {
 `)};
 
 let userIsAuthenticated = false;
+let previousNotesContainer;
 
 chrome.storage.sync.get(['userToken'], function (result) {
-  if (result.userToken === 'hell yes') {
+  if (result.userToken) {
     userIsAuthenticated = true;
-    main();
+    //main();
     chrome.runtime.sendMessage({ authenticated: "yes" }, function (response) {
-      console.log('Answer: ', response.token);
+      console.log('Answer: ', response && response.token);
     });
   } else {
+    if (localStorage.getItem('userToken')) {
+      chrome.storage.sync.set({ userToken:localStorage.getItem('userToken'), limit: Date.now() + 86400000 }, function () {
+        console.log('User token set as ' +localStorage.getItem('userToken'));
+        if (localStorage) {
+          localStorage.setItem('userToken',localStorage.getItem('userToken'));
+        } 
+        if (previousNotesContainer) {
+          previousNotesContainer.style.display = 'block';
+        }
+      })
+      userIsAuthenticated = true;
+    }
     console.log('User is not authenticated');
   }
 });
@@ -45,7 +57,7 @@ chrome.storage.sync.get(['userToken'], function (result) {
 window.onload = () => {
 
   if (userIsAuthenticated) {
-    main();
+    //main();
   }
 }
 
@@ -54,21 +66,23 @@ chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     console.log(sender.tab ?
       "from a content script:" + sender.tab.url :
-      "from the extension, token: ", request.token);
+      "from the extension, token: ", request && request.token);
     if (request && request.token == "hello") {
-      sendResponse({ farewell: "goodbye" });
+      sendResponse({ farewell: localStorage.getItem('userToken') });
       chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
         console.log('Answer: ', response && response.token);
-        chrome.storage.sync.set({ userToken: 'hell yes', limit: Date.now() + 86400000 }, function () {
-          console.log('User token set as ' + 'hell yes');
+        chrome.storage.sync.set({ userToken: request.userToken, limit: Date.now() + 86400000 }, function () {
+          console.log('User token set as ' + request.userToken);
+          localStorage && localStorage.setItem('userToken', request.userToken);
+          if (previousNotesContainer) {
+            previousNotesContainer.style.display = 'block';
+          } 
         })
       });
       userIsAuthenticated = true;
       main();
     } else if (request && request.token == "check") {
-      console.log('checking')
       chrome.storage.sync.get(['userToken', 'limit'], function (result) {
-        console.log(result.limit, typeof result.limit)
         if (result.limit < Date.now()) {
           console.log('Expired token');
           chrome.storage.sync.remove(['userToken', 'limit'], () => {
@@ -79,12 +93,11 @@ chrome.runtime.onMessage.addListener(
           });
         }
 
-        if (result.userToken && result.userToken === 'hell yes') {
+        if (result.userToken && result.limit > Date.now()) {
           userIsAuthenticated = true;
           main();
-          console.log('Still logged in');
-          chrome.runtime.sendMessage({ loggedIn: "yes" }, function (response) {
-            console.log('Answer: ', response && response.token);
+          chrome.runtime.sendMessage({ loggedIn: "yeresponses" }, function (response) {
+            console.log('Answer: ', response && response.userToken);
           });
         } else {
           console.log('User is not loggedin');
@@ -136,20 +149,20 @@ const main = () => {
   pagesNotes.classList = 'notes-notice notes-notice--hide';
 
   addNoteBtnContainer.innerHTML = `
-<button type="button" class="btn-default modal-test" id="addNoteBtn">
+<button type="button" class="buttao-default modal-test" id="addNoteBtn">
   Add Note
 </button>
 `;
 
   noteTypeRow.innerHTML = `
-<button type="button" data-type="text" class="btn-default noteTypeBtn">
-  Plain/Text
+<button type="button" data-type="text" class="buttao-default noteTypeBtn">
+✏️ Plain/Text
 </button>
-<button type="button" data-type="image" class="btn-default noteTypeBtn">
-  Screenshot
+<button type="button" data-type="image" class="buttao-default noteTypeBtn">
+📷 Screenshot
 </button>
-<button type="button" data-type="video" class="btn-default noteTypeBtn">
-  Video
+<button type="button" data-type="video" class="buttao-default noteTypeBtn">
+🎥 Video
 </button>
 `;
 
@@ -159,24 +172,24 @@ const main = () => {
 `;
 
   textInputContainerElement.innerHTML = `
-  <textarea maxlength="50" class="text-input" id="textInput"></textarea> 
-  <button type="button" class="btn-default text-input-btn" id="textInputBtn">
+  <textarea maxlength="500" class="text-input" id="textInput"></textarea> 
+  <button type="button" class="buttao-default text-input-btn" id="textInputBtn">
     Add
   </button>
   `;
 
   videoInputElement.innerHTML = `
   <video id="player" class="video-player" controls></video>
-  <button id="stop">Stop</button>
-  <a id="download" class="btn btn-default">Download</a>
+  <button class="buttao-default" id="stop">Stop</button>
+  <a id="download" class="btn buttao-default">Download</a>
   `;
 
   pagesNotes.innerHTML = (`
   <button type="button" class="close-ico" id="closePagesNotes">❌</button>
-  <button type="button" class="open-ico" id="normalPagesNotes">Notes</button>
+  <button type="button" class="open-ico" id="normalPagesNotes">💡</button>
   <p>This page has notes...</p>
-  <button class="btn btn-default" id="showPreviousNotes">Show notes</button>
-  <button class="btn btn-default" id="hidePreviousNotes" type="button">Hide notes</button>
+  <button class="btn buttao-default" id="showPreviousNotes">💡  Show notes</button>
+  <button class="btn buttao-default buttao-secondario" id="hidePreviousNotes" type="button">Hide notes</button>
   `);
 
   const noteList = currentPageNotes();
@@ -213,18 +226,23 @@ const main = () => {
 
   Array.from(videoNoteItems.children).forEach(videoNote => {
     // time in seconds
+    if (window.location.host !== 'www.youtube.com') { return }
+
     const videoDimensions = videoNote.getBoundingClientRect();
     const fullSize = pageVideo.duration;
     const timeStamps = [videoNote.dataset.start, videoNote.dataset.end];
-    const startPercentage = Number.parseFloat(videoNote.dataset.start) / fullSize;
-
+    const startPercentage = Number.parseInt(180, 10) / fullSize;
+    console.log(videoDimensions);
+    console.log(fullSize, pageVideo);
+    console.log(videoNote.dataset.start)
     videoNote.style.position = 'absolute';
     videoNote.style.left = `${(startPercentage * videoDimensions.width) + videoDimensions.x <= (videoDimensions.width - 100) ? (startPercentage * videoDimensions.width) + videoDimensions.x  : (videoDimensions.width - 100)}px`;
-    videoNote.style.top = `${videoDimensions.height + videoDimensions.y}px`;
-    videoNote.stye.display = 'block !important';
+    videoNote.style.top = `${380}px`;
+    videoNote.style.display = 'block !important';
     videoNote.style.backgroundImage = 'linear-gradient(to top, #ff105f99, #ffad0699)';
     videoNote.style.padding = '3px 5px';
     videoNote.style.width = '100px';
+    videoNote.style.height = '33px';
     videoNote.style.overflow = 'hidden';
     videoNote.style.textOverflow = 'ellipsis';
     console.log(`At ${startPercentage}% of the video of ${fullSize}`);
@@ -244,7 +262,6 @@ const main = () => {
   let videoRangeInputs;
   let textInputContainer;
   let videoInputContainer;
-  let previousNotesContainer;
   let showPreviousNotes;
   let hidePreviousNotes;
   let closePagesNotes;
@@ -307,11 +324,11 @@ const main = () => {
         videoInputContainer.classList.add('input-video--hidden');
 
         if (type === 'image') {
-          handleScreenshot(overVideo, overElement);
+          handleScreenshot(overVideo, overElement, coords);
         } else if (type === 'text') {
           document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
           textInputContainer.classList.remove('input-text--hidden');
-          handleText(overVideo ? videoRangeInputs : false, textInputContainer);
+          handleText(overVideo ? videoRangeInputs : false, textInputContainer, coords);
         } else if (type === 'video') {
           document.getElementsByClassName('note-btn-list')[0].classList.add('hidden');
           videoInputContainer.classList.remove('input-video--hidden');
@@ -321,12 +338,17 @@ const main = () => {
     });
   }
 
+  addNoteBtn.addEventListener('click', e => {
+    textInputContainer.classList.add('input-text--hidden');W
+    document.querySelectorAll('#videoInputContainer')[1].classList.add('input-video--hidden');
+    document.querySelectorAll('#videoInputContainer')[0].classList.add('input-video--hidden');
+  });
+
   window.onkeydown = async function (e) {
     if (!keys.includes(e.key)) {
       keys.push(e.key);
       if (keys.includes('W') && keys.includes('Shift')) {
         if (addNoteBtnCont) {
-          videoRangeContainer.classList.add('video-range--hidden');
           addNoteBtnCont.classList.toggle('btnContainer--hidden');
 
           noteTypeEvents(overVideo, overElement);
@@ -336,6 +358,7 @@ const main = () => {
             console.log(`Video at ${overVideo.currentTime} and with total duration of ${overVideo.duration}`);
             console.log(`Video currently ${overVideo.paused ? 'paused' : 'playing'}`);
 
+            document.getElementById('rangeControllGroup').classList.remove('video-range--hidden')
             videoRangeContainer.classList.remove('video-range--hidden');
             const youtubeProgressBar = document.getElementsByClassName('ytp-progress-bar')[0];
 
@@ -401,10 +424,15 @@ const main = () => {
   // End get key commands to show button
 
   previousNotesContainer = document.querySelectorAll('#previouslyAddedNotes')[1];
-  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[1];
+  document.querySelectorAll('#previouslyAddedNotes')[0].display = 'none';
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')
+  showPreviousNotes = document.querySelectorAll('#showPreviousNotes')[showPreviousNotes.length - 1]
+
+  document.querySelectorAll('#showPreviousNotes')[0].style.display = 'none';
   hidePreviousNotes = document.querySelectorAll('#hidePreviousNotes')[1];
 
-  showPreviousNotes && showPreviousNotes.addEventListener('click', e => {
+
+  showPreviousNotes.addEventListener('click', e => {
     document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
     previousNotesContainer.classList.remove('notes-notice--hide');
@@ -423,13 +451,14 @@ const main = () => {
     previousNotesContainer.classList.remove('notes-notice--small');
   });
 
-  hidePreviousNotes.addEventListener('click', e => {
+  hidePreviousNotes && hidePreviousNotes.addEventListener('click', e => {
     document.querySelectorAll('#previouslyAddedNotes')[0].style.display = 'none';
 
       previousNotesContainer.classList.add('notes-notice--hide');
   });
 
-  addNoteBtn && addNoteBtn.addEventListener('click', e => {
+  document.getElementById('addNoteBtn').addEventListener('click', e => {
+    console.log('WUH')
     if (noteTypeBtns) {
       document.getElementsByClassName('note-btn-list')[0].classList.remove('remove');
       noteTypeBtns.classList.remove('row--hidden');
